@@ -21,10 +21,10 @@
 
 ```bash
 # Install
-curl -sSL https://raw.githubusercontent.com/cqi/my_agentmux/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/HubQC/my-agentmux/main/scripts/install.sh | bash
 
 # Or build from source
-git clone https://github.com/cqi/my_agentmux.git
+git clone https://github.com/HubQC/my-agentmux.git
 cd my_agentmux
 make build
 

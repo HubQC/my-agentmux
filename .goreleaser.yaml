@@ -48,8 +48,8 @@ changelog:
 
 release:
   github:
-    owner: cqi
-    name: my_agentmux
+    owner: HubQC
+    name: my-agentmux
   draft: false
   prerelease: auto
   name_template: "v{{.Version}}"

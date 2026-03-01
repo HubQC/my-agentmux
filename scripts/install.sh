@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # AgentMux Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/cqi/my_agentmux/main/scripts/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/HubQC/my-agentmux/main/scripts/install.sh | bash
 
-REPO="cqi/my_agentmux"
+REPO="HubQC/my-agentmux"
 BINARY="agentmux"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
