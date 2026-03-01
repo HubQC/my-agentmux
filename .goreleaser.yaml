@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+
+version: 2
+
+project_name: agentmux
+
+before:
+  hooks:
+    - go mod tidy
+    - go vet ./...
+
+builds:
+  - id: agentmux
+    main: .
+    binary: agentmux
+    ldflags:
+      - -s -w
+      - -X github.com/cqi/my_agentmux/cmd.Version={{.Version}}
+      - -X github.com/cqi/my_agentmux/cmd.GitCommit={{.Commit}}
+      - -X github.com/cqi/my_agentmux/cmd.BuildDate={{.Date}}
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+release:
+  github:
+    owner: cqi
+    name: my_agentmux
+  draft: false
+  prerelease: auto
+  name_template: "v{{.Version}}"

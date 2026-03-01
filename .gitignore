@@ -1,0 +1,34 @@
+# Binaries
+agentmux
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Build output
+dist/
+
+# Test binary
+*.test
+
+# Go workspace
+go.work
+go.work.sum
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AgentMux runtime data
+.agentmux/
+
+# Temporary
+*.tmp
+*.log
