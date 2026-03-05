@@ -55,10 +55,11 @@ agentmux dashboard
 | `agentmux send <name> <msg>` | Send input to an agent |
 | `agentmux agents [--all]` | List available agent types |
 | `agentmux dashboard` | Open the real-time TUI dashboard |
-| `agentmux plan create <title>` | Create a workflow plan |
+| `agentmux plan create <title>` | Create a workflow plan (use `--agent-driven` if inside an agent) |
 | `agentmux plan list` | List all plans |
 | `agentmux plan approve <id>` | Approve a plan |
 | `agentmux plan reject <id>` | Reject a plan |
+| `agentmux pipeline run <name>` | Run an orchestrated sequence of agents |
 | `agentmux init` | Initialize configuration |
 | `agentmux completion <shell>` | Generate shell completions |
 | `agentmux version` | Show version info |
@@ -74,6 +75,9 @@ Built-in presets:
 | `codex` | `codex` | OpenAI Codex CLI |
 | `gemini` | `gemini` | Google Gemini CLI |
 | `copilot` | `github-copilot-cli` | GitHub Copilot |
+| `cline` | `cline` | Cline Autonomous Agent |
+| `openhands` | `openhands` | OpenHands AI Agent |
+| `ollama` | `ollama` | Local LLM CLI (`ollama run ...`) |
 | `shell` | — | Plain shell session |
 
 ### Custom Agent Definitions
@@ -125,6 +129,10 @@ agents:
   reviewer:
     agent_type: claude
     args: ["--verbose"]
+pipelines:
+  test-pipeline:
+    - claude
+    - aider
 ```
 
 ## Dashboard
@@ -137,8 +145,10 @@ The TUI dashboard provides a real-time view of all running agents:
 │ ──────────────────── ││ ─────────────────────────────────────── │
 │ ● my-coder           ││ Working on authentication module...     │
 │   claude 5m          ││ Created auth.go with JWT middleware     │
+│   [8.5% CPU | 45 MB] ││                                         │
 │ ● reviewer           ││ Running tests...                        │
 │   claude 2m          ││ All 12 tests pass ✓                     │
+│   [2.1% CPU | 30 MB] ││                                         │
 │ ○ helper             ││                                         │
 │   shell -            ││                                         │
 └──────────────────────┘└─────────────────────────────────────────┘
