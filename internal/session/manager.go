@@ -49,6 +49,7 @@ type CreateOptions struct {
 	Command   string
 	Args      []string
 	Env       map[string]string
+	Group     string
 }
 
 // Create creates a new agent session.
@@ -109,6 +110,7 @@ func (m *Manager) Create(ctx context.Context, opts CreateOptions) (*AgentSession
 		WorkDir:   opts.WorkDir,
 		CreatedAt: time.Now(),
 		Status:    "running",
+		Group:     opts.Group,
 	}
 
 	if err := m.state.Put(agentSession); err != nil {
