@@ -15,8 +15,8 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.SessionPrefix != "amux" {
 		t.Errorf("expected SessionPrefix=amux, got %s", cfg.SessionPrefix)
 	}
-	if cfg.DefaultAgentType != "claude" {
-		t.Errorf("expected DefaultAgentType=claude, got %s", cfg.DefaultAgentType)
+	if cfg.DefaultAgentType != "codex" {
+		t.Errorf("expected DefaultAgentType=codex, got %s", cfg.DefaultAgentType)
 	}
 	if cfg.Monitor.PollIntervalMs != 500 {
 		t.Errorf("expected PollIntervalMs=500, got %d", cfg.Monitor.PollIntervalMs)
