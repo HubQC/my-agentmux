@@ -8,12 +8,21 @@ import (
 	"time"
 
 	"github.com/cqi/my_agentmux/internal/tmux"
+	"github.com/shirou/gopsutil/v3/process"
 )
 
 // Event represents a captured output event from an agent.
 type Event struct {
 	AgentName string
 	Content   string
+	Timestamp time.Time
+}
+
+// ResourceEvent represents CPU and Memory usage of an agent's pane process.
+type ResourceEvent struct {
+	AgentName string
+	CPU       float64
+	Memory    uint64 // in bytes
 	Timestamp time.Time
 }
 
@@ -25,6 +34,7 @@ type Watcher struct {
 	pollInterval time.Duration
 	agents       map[string]*watchedAgent
 	eventCh      chan Event
+	resourceCh   chan ResourceEvent
 	stopCh       chan struct{}
 	stopped      bool
 }
@@ -32,6 +42,7 @@ type Watcher struct {
 type watchedAgent struct {
 	tmuxSession string
 	lastOutput  string
+	pid         int
 	cancel      context.CancelFunc
 }
 
@@ -47,6 +58,7 @@ func NewWatcher(tmuxClient *tmux.Client, logger *Logger, pollIntervalMs int) *Wa
 		pollInterval: time.Duration(pollIntervalMs) * time.Millisecond,
 		agents:       make(map[string]*watchedAgent),
 		eventCh:      make(chan Event, 100),
+		resourceCh:   make(chan ResourceEvent, 100),
 		stopCh:       make(chan struct{}),
 	}
 }
@@ -54,6 +66,11 @@ func NewWatcher(tmuxClient *tmux.Client, logger *Logger, pollIntervalMs int) *Wa
 // Events returns the channel of output events.
 func (w *Watcher) Events() <-chan Event {
 	return w.eventCh
+}
+
+// ResourceEvents returns the channel of resource events.
+func (w *Watcher) ResourceEvents() <-chan ResourceEvent {
+	return w.resourceCh
 }
 
 // Watch starts polling a tmux session for output changes.
@@ -104,6 +121,7 @@ func (w *Watcher) Stop() {
 
 	close(w.stopCh)
 	close(w.eventCh)
+	close(w.resourceCh)
 }
 
 // IsWatching returns true if the agent is being watched.
@@ -127,6 +145,7 @@ func (w *Watcher) pollLoop(ctx context.Context, agentName string, wa *watchedAge
 			return
 		case <-ticker.C:
 			w.captureAndEmit(ctx, agentName, wa)
+			w.captureResources(ctx, agentName, wa)
 		}
 	}
 }
@@ -175,5 +194,61 @@ func (w *Watcher) captureAndEmit(ctx context.Context, agentName string, wa *watc
 	case w.eventCh <- event:
 	default:
 		// Channel full — drop event to avoid blocking
+	}
+}
+
+// captureResources captures CPU and memory usage and emits a ResourceEvent.
+func (w *Watcher) captureResources(ctx context.Context, agentName string, wa *watchedAgent) {
+	// Discover PID if we haven't yet
+	if wa.pid <= 0 {
+		pid, err := w.tmux.GetPanePID(ctx, wa.tmuxSession)
+		if err != nil || pid <= 0 {
+			return
+		}
+		wa.pid = pid
+	}
+
+	p, err := process.NewProcess(int32(wa.pid))
+	if err != nil {
+		// Process died or invalid
+		return
+	}
+
+	// For true agent usage, we should sum children, but to keep it simple and performant,
+	// checking the main pane process (often a shell) and its direct children is good enough.
+	// For deeper accuracy, we could recursively sum `p.Children()`.
+	
+	// Default to main process metrics
+	cpu, _ := p.CPUPercent()
+	memInfo, _ := p.MemoryInfo()
+	var mem uint64
+	if memInfo != nil {
+		mem = memInfo.RSS
+	}
+
+	// Try to sum direct children to capture CLI tools (like python/node) running under the shell
+	children, err := p.Children()
+	if err == nil {
+		for _, child := range children {
+			childCPU, _ := child.CPUPercent()
+			cpu += childCPU
+			
+			childMem, _ := child.MemoryInfo()
+			if childMem != nil {
+				mem += childMem.RSS
+			}
+		}
+	}
+
+	event := ResourceEvent{
+		AgentName: agentName,
+		CPU:       cpu,
+		Memory:    mem,
+		Timestamp: time.Now(),
+	}
+
+	select {
+	case w.resourceCh <- event:
+	default:
 	}
 }

@@ -21,6 +21,9 @@ type tickMsg time.Time
 // eventMsg carries a watcher event.
 type eventMsg monitor.Event
 
+// resourceMsg carries a watcher resource event.
+type resourceMsg monitor.ResourceEvent
+
 // Model is the main bubbletea model for the dashboard.
 type Model struct {
 	cfg        *config.Config
@@ -34,6 +37,9 @@ type Model struct {
 
 	// Log lines per agent name.
 	agentLogs map[string][]string
+
+	// Resources per agent name.
+	agentResources map[string]monitor.ResourceEvent
 
 	width  int
 	height int
@@ -51,10 +57,11 @@ func NewModel(cfg *config.Config, sessionMgr *session.Manager, tmuxClient *tmux.
 		sessionMgr: sessionMgr,
 		watcher:    watcher,
 		tmuxClient: tmuxClient,
-		agentList:  components.NewAgentList(),
-		logViewer:  components.NewLogViewer(),
-		statusBar:  components.NewStatusBar(),
-		agentLogs:  make(map[string][]string),
+		agentList:      components.NewAgentList(),
+		logViewer:      components.NewLogViewer(),
+		statusBar:      components.NewStatusBar(),
+		agentLogs:      make(map[string][]string),
+		agentResources: make(map[string]monitor.ResourceEvent),
 	}
 }
 
@@ -63,6 +70,7 @@ func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		tickCmd(),
 		m.listenForEvents(),
+		m.listenForResourceEvents(),
 	)
 }
 
@@ -139,6 +147,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.syncLogViewer()
 		return m, m.listenForEvents()
+
+	case resourceMsg:
+		event := monitor.ResourceEvent(msg)
+		m.agentResources[event.AgentName] = event
+		
+		// Update agentList immediately for responsive UI
+		for i := range m.agentList.Agents {
+			if m.agentList.Agents[i].Name == event.AgentName {
+				m.agentList.Agents[i].CPU = event.CPU
+				m.agentList.Agents[i].Memory = event.Memory
+				break
+			}
+		}
+		return m, m.listenForResourceEvents()
 	}
 
 	return m, nil
@@ -173,13 +195,19 @@ func (m *Model) refreshAgents() {
 	agents := make([]components.AgentInfo, len(sessions))
 	running := 0
 	for i, s := range sessions {
-		agents[i] = components.AgentInfo{
+		ag := components.AgentInfo{
 			Name:      s.Name,
 			Type:      s.AgentType,
 			Status:    s.Status,
 			WorkDir:   s.WorkDir,
 			CreatedAt: s.CreatedAt,
 		}
+		if res, ok := m.agentResources[s.Name]; ok {
+			ag.CPU = res.CPU
+			ag.Memory = res.Memory
+		}
+		agents[i] = ag
+
 		if s.Status == "running" {
 			running++
 
@@ -262,5 +290,16 @@ func (m Model) listenForEvents() tea.Cmd {
 			return nil
 		}
 		return eventMsg(event)
+	}
+}
+
+// listenForResourceEvents returns a command that reads the next resource event from the watcher.
+func (m Model) listenForResourceEvents() tea.Cmd {
+	return func() tea.Msg {
+		event, ok := <-m.watcher.ResourceEvents()
+		if !ok {
+			return nil
+		}
+		return resourceMsg(event)
 	}
 }
