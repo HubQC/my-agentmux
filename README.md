@@ -8,6 +8,7 @@
 
 - **Multi-Agent Sessions** — Run Claude Code, Aider, Codex, Gemini CLI, or any CLI agent in isolated tmux sessions
 - **Real-Time Dashboard** — Monitor all agents with a beautiful bubbletea TUI
+- **Tree-Style Session Navigator** — Collapsible, grouped sidebar with mouse click support
 - **Live Output Streaming** — Watch agent output in real-time with `logs --follow`
 - **Inter-Agent Communication** — Send messages between agents via `send`
 - **Workflow Plans** — Create, approve, and reject spec-driven workflow plans
@@ -47,7 +48,7 @@ agentmux dashboard
 
 | Command | Description |
 |---------|-------------|
-| `agentmux start <name>` | Start a new agent session |
+| `agentmux start <name>` | Start a new agent session (`-g` to assign group) |
 | `agentmux list` | List all agent sessions |
 | `agentmux stop <name\|--all>` | Stop agent session(s) |
 | `agentmux attach <name>` | Attach to an agent's tmux session |
@@ -133,6 +134,12 @@ pipelines:
   test-pipeline:
     - claude
     - aider
+groups:
+  frontend:
+    - react-coder
+    - style-reviewer
+  backend:
+    - api-coder
 ```
 
 ## Dashboard
@@ -141,21 +148,22 @@ The TUI dashboard provides a real-time view of all running agents:
 
 ```
 ┌──────────────────────┐┌─────────────────────────────────────────┐
-│ ⚡ AGENTS             ││ 📋 MY-CODER                             │
+│ 🌳 SESSIONS           ││ 📋 MY-CODER                             │
 │ ──────────────────── ││ ─────────────────────────────────────── │
-│ ● my-coder           ││ Working on authentication module...     │
-│   claude 5m          ││ Created auth.go with JWT middleware     │
-│   [8.5% CPU | 45 MB] ││                                         │
-│ ● reviewer           ││ Running tests...                        │
-│   claude 2m          ││ All 12 tests pass ✓                     │
-│   [2.1% CPU | 30 MB] ││                                         │
-│ ○ helper             ││                                         │
-│   shell -            ││                                         │
+│ ▼ my-project (2)     ││ Working on authentication module...     │
+│   ● my-coder         ││ Created auth.go with JWT middleware     │
+│     [8.5% CPU | 45MB]││                                         │
+│   ● reviewer         ││ Running tests...                        │
+│     [2.1% CPU | 30MB]││ All 12 tests pass ✓                     │
+│ ▸ /tmp (1)           ││                                         │
+│                      ││                                         │
 └──────────────────────┘└─────────────────────────────────────────┘
- ↑/k up │ ↓/j down │ pgup/pgdn scroll │ a attach │ d stop │ q quit  2/3 agents
+ ↑/k up │ ↓/j down │ Enter select │ ←/→ fold │ a attach │ q quit  2/3 agents
 ```
 
-**Keyboard shortcuts:** ↑/k ↓/j navigate, pgup/pgdn scroll logs, `a` attach, `d` stop, `q` quit.
+**Keyboard shortcuts:** ↑/k ↓/j navigate, Enter select/toggle, ←/→ collapse/expand, pgup/pgdn scroll logs, `a` attach, `d` stop, `q` quit.
+
+**Mouse:** Click on sessions to select, click on groups to collapse/expand.
 
 ## Development
 

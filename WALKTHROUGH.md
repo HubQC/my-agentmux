@@ -374,5 +374,6 @@ $ make build   ✓ binary with ldflags
 - **Agent-Driven Plans**: Added `--agent-driven` flag to `agentmux plan create` allowing agents to natively trigger workflows identifying themselves from injected env vars.
 - **TUI CPU/Memory Monitoring**: Added `github.com/shirou/gopsutil` CPU and memory monitoring to the bubbletea dashboard.
 - **TUI ANSI Formatting**: Implemented `github.com/charmbracelet/x/ansi` log output truncation to perfectly preserve CLI colors without visual glitching.
+- **Tree-Style Session Navigator**: Replaced flat agent list with collapsible `SessionTree` component grouped by workdir (default), explicit `--group` flag, or project config `groups:` map. Supports mouse click and keyboard (Enter/←/→) navigation.
 
 ### Tests: Up to 74 passing tests.

@@ -129,6 +129,7 @@ CLI (cobra)
 
 **Files:**
 - `internal/tui/app.go` — main bubbletea model (agent list + detail/log panel)
+- `internal/tui/components/session_tree.go` — collapsible tree sidebar with group support
 - `internal/tui/components/agent_list.go` — agent sidebar (includes gopsutil resource tracking)
 - `internal/tui/components/log_viewer.go` — scrollable log viewer (with ANSI truncation)
 - `internal/tui/components/status_bar.go` — bottom bar
