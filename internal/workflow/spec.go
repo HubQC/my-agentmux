@@ -61,8 +61,8 @@ func NewPlanStore(dir string) (*PlanStore, error) {
 	return &PlanStore{dir: dir}, nil
 }
 
-// Create creates a new plan with the given title and description.
-func (s *PlanStore) Create(title, description string) (*Plan, error) {
+// Create creates a new plan with the given title, description, and optional agent.
+func (s *PlanStore) Create(title, description, agent string) (*Plan, error) {
 	if title == "" {
 		return nil, fmt.Errorf("plan title is required")
 	}
@@ -77,6 +77,7 @@ func (s *PlanStore) Create(title, description string) (*Plan, error) {
 		ID:          id,
 		Title:       title,
 		Description: description,
+		Agent:       agent,
 		Status:      StatusDraft,
 		CreatedAt:   now,
 		UpdatedAt:   now,

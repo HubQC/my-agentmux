@@ -127,7 +127,7 @@ func TestEndToEndWorkflowFlow(t *testing.T) {
 	}
 
 	// Create → approve
-	plan, err := store.Create("E2E Test Plan", "Integration test plan")
+	plan, err := store.Create("E2E Test Plan", "Integration test plan", "")
 	if err != nil {
 		t.Fatalf("failed to create: %v", err)
 	}
@@ -137,7 +137,7 @@ func TestEndToEndWorkflowFlow(t *testing.T) {
 	}
 
 	// Create → reject
-	plan2, _ := store.Create("Rejected Plan", "")
+	plan2, _ := store.Create("Rejected Plan", "", "")
 	if err := store.Reject(plan2.ID, "E2E test rejection"); err != nil {
 		t.Fatalf("failed to reject: %v", err)
 	}
@@ -215,6 +215,65 @@ func TestEndToEndConfigAndAgentDefs(t *testing.T) {
 	}
 	if defs[0].Name != "e2e-agent" {
 		t.Errorf("expected name 'e2e-agent', got %q", defs[0].Name)
+	}
+}
+
+// TestEndToEndPipeline tests running an orchestrated sequence of agents.
+func TestEndToEndPipeline(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Global config
+	cfg := config.DefaultConfig()
+	cfg.DataDir = tmpDir
+	cfg.SessionPrefix = "amux-pipe"
+	os.MkdirAll(cfg.SessionsDir(), 0o755)
+
+	// Project config
+	projCfg := &config.ProjectConfig{
+		DefaultAgentType: "shell", // Use fast shell agents for testing
+		Pipelines: map[string][]string{
+			"test-pipeline": {"agent-1", "agent-2"},
+		},
+	}
+	if err := config.SaveProjectConfig(tmpDir, projCfg); err != nil {
+		t.Fatalf("failed to save project config: %v", err)
+	}
+
+	activeCfg := config.MergeProjectConfig(cfg, projCfg)
+	mgr, err := session.NewManager(activeCfg)
+	if err != nil {
+		t.Fatalf("failed to create manager: %v", err)
+	}
+	runner := agent.NewRunner(activeCfg, mgr)
+	ctx := context.Background()
+
+	pipeline := projCfg.Pipelines["test-pipeline"]
+
+	// Emulate pipeline command behaviour
+	for _, agentName := range pipeline {
+		opts := agent.LaunchOptions{
+			Name:    agentName,
+			WorkDir: tmpDir,
+			// Since we want this to exit immediately so the pipeline moves on,
+			// we override the command to just be `true` or `echo done`.
+			Command: "echo " + agentName + " done",
+		}
+
+		sess, err := runner.Launch(ctx, opts)
+		if err != nil {
+			t.Fatalf("failed to launch agent %q: %v", agentName, err)
+		}
+
+		// Verify session was created
+		if sess.Status != "running" {
+			t.Errorf("expected status 'running' for %s", agentName)
+		}
+
+		// Wait briefly
+		time.Sleep(100 * time.Millisecond)
+
+		// Terminate to allow pipeline to continue
+		_ = mgr.Destroy(ctx, agentName)
 	}
 }
 

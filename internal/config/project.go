@@ -23,6 +23,9 @@ type ProjectConfig struct {
 	// Env are environment variables set for all agents in this project.
 	Env map[string]string `yaml:"env,omitempty"`
 
+	// Pipelines defines orchestrated sequences of agents (e.g., ["architect", "coder"]).
+	Pipelines map[string][]string `yaml:"pipelines,omitempty"`
+
 	// SourceFile is the path to the config file (not serialized).
 	SourceFile string `yaml:"-"`
 }

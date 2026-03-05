@@ -77,6 +77,13 @@ func (r *Runner) Launch(ctx context.Context, opts LaunchOptions) (*session.Agent
 		command = ""
 	}
 
+	// Always inject basic AgentMux env variables
+	if opts.Env == nil {
+		opts.Env = make(map[string]string)
+	}
+	opts.Env["AGENTMUX_AGENT_NAME"] = opts.Name
+	opts.Env["AGENTMUX_SESSION_PREFIX"] = r.cfg.SessionPrefix
+
 	// Create the session via session manager
 	createOpts := session.CreateOptions{
 		Name:      opts.Name,
