@@ -31,15 +31,18 @@ type Model struct {
 	watcher    *monitor.Watcher
 	tmuxClient *tmux.Client
 
-	agentList components.AgentList
-	logViewer components.LogViewer
-	statusBar components.StatusBar
+	sessionTree components.SessionTree
+	logViewer   components.LogViewer
+	statusBar   components.StatusBar
 
 	// Log lines per agent name.
 	agentLogs map[string][]string
 
 	// Resources per agent name.
 	agentResources map[string]monitor.ResourceEvent
+
+	// Project groups for tree grouping.
+	projectGroups map[string][]string
 
 	width  int
 	height int
@@ -55,9 +58,9 @@ func NewModel(cfg *config.Config, sessionMgr *session.Manager, tmuxClient *tmux.
 	return Model{
 		cfg:        cfg,
 		sessionMgr: sessionMgr,
-		watcher:    watcher,
-		tmuxClient: tmuxClient,
-		agentList:      components.NewAgentList(),
+		watcher:        watcher,
+		tmuxClient:     tmuxClient,
+		sessionTree:    components.NewSessionTree(),
 		logViewer:      components.NewLogViewer(),
 		statusBar:      components.NewStatusBar(),
 		agentLogs:      make(map[string][]string),
@@ -85,13 +88,30 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "up", "k":
-			m.agentList.MoveUp()
+			m.sessionTree.MoveUp()
 			m.syncLogViewer()
 			return m, nil
 
 		case "down", "j":
-			m.agentList.MoveDown()
+			m.sessionTree.MoveDown()
 			m.syncLogViewer()
+			return m, nil
+
+		case "enter":
+			node := m.sessionTree.SelectedNode()
+			if node != nil && node.IsGroup {
+				m.sessionTree.Toggle()
+			} else {
+				m.syncLogViewer()
+			}
+			return m, nil
+
+		case "left":
+			m.sessionTree.Collapse()
+			return m, nil
+
+		case "right":
+			m.sessionTree.Expand()
 			return m, nil
 
 		case "pgup":
@@ -104,7 +124,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "a":
 			// Attach — quit TUI first, then attach
-			if agent := m.agentList.SelectedAgent(); agent != nil && agent.Status == "running" {
+			if agent := m.sessionTree.SelectedAgent(); agent != nil && agent.Status == "running" {
 				m.quitting = true
 				m.watcher.Stop()
 				tmuxSession := m.cfg.SessionPrefix + "-" + agent.Name
@@ -117,7 +137,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "d":
 			// Destroy selected agent
-			if agent := m.agentList.SelectedAgent(); agent != nil {
+			if agent := m.sessionTree.SelectedAgent(); agent != nil {
 				_ = m.sessionMgr.Destroy(context.Background(), agent.Name)
 				m.watcher.Unwatch(agent.Name)
 				return m, tickCmd()
@@ -129,6 +149,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.updateLayout()
+		return m, nil
+
+	case tea.MouseMsg:
+		if msg.Action == tea.MouseActionRelease && msg.Button == tea.MouseButtonLeft {
+			// Calculate which tree row was clicked
+			// The sidebar starts at row 2 (title + separator) inside the border (row 1)
+			clickedRow := msg.Y - 3 // account for border + title + separator
+			if msg.X < m.sessionTree.Width && clickedRow >= 0 && clickedRow < len(m.sessionTree.FlatItems) {
+				m.sessionTree.Selected = clickedRow
+				node := m.sessionTree.SelectedNode()
+				if node != nil && node.IsGroup {
+					m.sessionTree.Toggle()
+				} else {
+					m.syncLogViewer()
+				}
+			}
+		}
 		return m, nil
 
 	case tickMsg:
@@ -153,10 +190,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.agentResources[event.AgentName] = event
 		
 		// Update agentList immediately for responsive UI
-		for i := range m.agentList.Agents {
-			if m.agentList.Agents[i].Name == event.AgentName {
-				m.agentList.Agents[i].CPU = event.CPU
-				m.agentList.Agents[i].Memory = event.Memory
+		for i, fi := range m.sessionTree.FlatItems {
+			if fi.Node.Agent != nil && fi.Node.Agent.Name == event.AgentName {
+				m.sessionTree.FlatItems[i].Node.Agent.CPU = event.CPU
+				m.sessionTree.FlatItems[i].Node.Agent.Memory = event.Memory
 				break
 			}
 		}
@@ -177,7 +214,7 @@ func (m Model) View() string {
 	}
 
 	// Render components
-	sidebar := m.agentList.Render()
+	sidebar := m.sessionTree.Render()
 	logPanel := m.logViewer.Render()
 	statusBar := m.statusBar.Render()
 
@@ -201,6 +238,7 @@ func (m *Model) refreshAgents() {
 			Status:    s.Status,
 			WorkDir:   s.WorkDir,
 			CreatedAt: s.CreatedAt,
+			Group:     s.Group,
 		}
 		if res, ok := m.agentResources[s.Name]; ok {
 			ag.CPU = res.CPU
@@ -218,17 +256,17 @@ func (m *Model) refreshAgents() {
 		}
 	}
 
-	m.agentList.Agents = agents
+	m.sessionTree.BuildTree(agents, m.projectGroups)
 
 	// Fix selection if out of bounds
-	if m.agentList.Selected >= len(agents) && len(agents) > 0 {
-		m.agentList.Selected = len(agents) - 1
+	if m.sessionTree.Selected >= len(m.sessionTree.FlatItems) && len(m.sessionTree.FlatItems) > 0 {
+		m.sessionTree.Selected = len(m.sessionTree.FlatItems) - 1
 	}
 
 	// Update status bar
 	m.statusBar.TotalAgents = len(agents)
 	m.statusBar.RunningAgents = running
-	if agent := m.agentList.SelectedAgent(); agent != nil {
+	if agent := m.sessionTree.SelectedAgent(); agent != nil {
 		m.statusBar.SelectedAgent = agent.Name
 	} else {
 		m.statusBar.SelectedAgent = ""
@@ -239,7 +277,7 @@ func (m *Model) refreshAgents() {
 
 // syncLogViewer updates the log viewer to show the selected agent's logs.
 func (m *Model) syncLogViewer() {
-	agent := m.agentList.SelectedAgent()
+	agent := m.sessionTree.SelectedAgent()
 	if agent == nil {
 		m.logViewer.AgentName = ""
 		m.logViewer.Lines = nil
@@ -266,8 +304,8 @@ func (m *Model) updateLayout() {
 		mainHeight = 5
 	}
 
-	m.agentList.Width = sidebarWidth
-	m.agentList.Height = mainHeight
+	m.sessionTree.Width = sidebarWidth
+	m.sessionTree.Height = mainHeight
 
 	m.logViewer.Width = m.width - sidebarWidth
 	m.logViewer.Height = mainHeight

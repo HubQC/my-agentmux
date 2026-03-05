@@ -17,6 +17,7 @@ type AgentInfo struct {
 	CreatedAt time.Time
 	CPU       float64
 	Memory    uint64
+	Group     string
 }
 
 // AgentList renders a sidebar list of agents.
