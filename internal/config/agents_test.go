@@ -178,6 +178,24 @@ func TestParseFrontmatterUnclosed(t *testing.T) {
 	}
 }
 
+func TestLoadAgentDefinitionStrictSchema(t *testing.T) {
+	tmpDir := t.TempDir()
+	defFile := filepath.Join(tmpDir, "strict.yaml")
+
+	content := `description: Strict agent
+agent_type: aider
+unknown_field: should_fail
+`
+	if err := os.WriteFile(defFile, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := LoadAgentDefinition(defFile)
+	if err == nil {
+		t.Error("expected error for unknown field in YAML")
+	}
+}
+
 // --- Project config tests ---
 
 func TestLoadProjectConfig(t *testing.T) {
