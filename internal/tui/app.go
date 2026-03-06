@@ -122,15 +122,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.logViewer.ScrollDown(10)
 			return m, nil
 
-		case "a":
-			// Attach — quit TUI first, then attach
+		case "a", "A":
+			// Attach interactively using tea.ExecProcess
 			if agent := m.sessionTree.SelectedAgent(); agent != nil && agent.Status == "running" {
-				m.quitting = true
-				m.watcher.Stop()
 				tmuxSession := m.cfg.SessionPrefix + "-" + agent.Name
 				c := exec.Command(m.cfg.TmuxBinary, "attach-session", "-t", tmuxSession)
+				
+				// Suspend the TUI, attach to tmux, and resume when detached
 				return m, tea.ExecProcess(c, func(err error) tea.Msg {
-					return tea.Quit()
+					// When tmux detaches, force a refresh
+					return tickMsg{}
 				})
 			}
 			return m, nil

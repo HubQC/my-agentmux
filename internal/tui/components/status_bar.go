@@ -53,7 +53,7 @@ func (sb StatusBar) Render() string {
 		{"Enter", "select"},
 		{"←/→", "fold"},
 		{"pgup/pgdn", "scroll"},
-		{"a", "attach"},
+		{"a", "embed"},
 		{"d", "stop"},
 		{"q", "quit"},
 	}
