@@ -134,9 +134,13 @@ CLI (cobra)
 - `internal/tui/components/log_viewer.go` — scrollable log viewer (with ANSI truncation)
 - `internal/tui/components/status_bar.go` — bottom bar
 - `internal/tui/styles.go` — lipgloss theme
-- `cmd/dashboard.go` — `agentmux dashboard`
+- `cmd/dashboard.go` — `agentmux dashboard` (with `--split` native tmux split pane mode)
 
-**Verify:** `./agentmux start agent1 --agent-type echo && ./agentmux dashboard`
+**Interactive Features:**
+- `app.go` uses `tea.ExecProcess(tmux attach-session...)` to allow fullscreen embedding where the dashboard drops down temporarily and yields output to the agent session.
+- `--split` mode uses `tmux split-window -h` natively and updates the right pane using `tmux respawn-pane` upon selection within the dashboard tree.
+
+**Verify:** `./agentmux start agent1 --agent-type echo && ./agentmux dashboard --split`
 
 ---
 

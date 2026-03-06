@@ -161,7 +161,11 @@ The TUI dashboard provides a real-time view of all running agents:
  ↑/k up │ ↓/j down │ Enter select │ ←/→ fold │ a attach │ q quit  2/3 agents
 ```
 
-**Keyboard shortcuts:** ↑/k ↓/j navigate, Enter select/toggle, ←/→ collapse/expand, pgup/pgdn scroll logs, `a` attach, `d` stop, `q` quit.
+**Keyboard shortcuts:** `↑/k` `↓/j` navigate, `Enter` select/toggle, `←/→` collapse/expand, `pgup/pgdn` scroll logs, `d` stop, `q` quit.
+
+**Interactive Sessions:**
+- Press `a` on an agent to instantly embed that tmux session fullscreen inside the dashboard. Press `Ctrl+b` then `d` to detach and return.
+- Run `agentmux dashboard --split` to launch a Vim-style side-by-side split. The dashboard runs on the left, and pressing `Enter` on a session instantly switches the right terminal pane to that interactive agent.
 
 **Mouse:** Click on sessions to select, click on groups to collapse/expand.
 
