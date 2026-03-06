@@ -1,9 +1,14 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"os"
+	"os/exec"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/cqi/my_agentmux/internal/config"
 	"github.com/cqi/my_agentmux/internal/session"
 	"github.com/cqi/my_agentmux/internal/tmux"
 	tuipkg "github.com/cqi/my_agentmux/internal/tui"
@@ -35,8 +40,48 @@ Key bindings:
 			return fmt.Errorf("initializing tmux: %w", err)
 		}
 
+		// Check split mode
+		splitMode, _ := cmd.Flags().GetBool("split")
+		var rightPaneID string
+
+		if splitMode {
+			// Ensure we are inside tmux!
+			if os.Getenv("TMUX") == "" {
+				// Re-launch this command inside a new tmux session
+				args := []string{"new-session", "-A", "-s", cfg.SessionPrefix + "-dashboard", os.Args[0] + " dashboard --split"}
+				syscallCmd := exec.Command(cfg.TmuxBinary, args...)
+				syscallCmd.Stdin = os.Stdin
+				syscallCmd.Stdout = os.Stdout
+				syscallCmd.Stderr = os.Stderr
+				return syscallCmd.Run()
+			}
+
+			// Create the split pane: 70% width on the right, return pane ID
+			splitCmd := exec.Command(cfg.TmuxBinary, "split-window", "-h", "-p", "70", "-P", "-F", "#{pane_id}", "echo 'Waiting for selection...'; cat")
+			var out bytes.Buffer
+			splitCmd.Stdout = &out
+			if err := splitCmd.Run(); err != nil {
+				return fmt.Errorf("creating split window: %w", err)
+			}
+			rightPaneID = strings.TrimSpace(out.String())
+
+			// Cleanup the right pane when dashboard exits
+			defer func() {
+				if rightPaneID != "" {
+					_ = exec.Command(cfg.TmuxBinary, "kill-pane", "-t", rightPaneID).Run()
+				}
+			}()
+		}
+
+		// Try to load project config to resolve groups
+		var projectCfg *config.ProjectConfig
+		workDir, _ := os.Getwd()
+		if pCfg, err := config.LoadProjectConfig(workDir); err == nil {
+			projectCfg = pCfg
+		}
+
 		// Create TUI model
-		model := tuipkg.NewModel(cfg, mgr, tmuxClient)
+		model := tuipkg.NewModel(cfg, mgr, tmuxClient, splitMode, rightPaneID, projectCfg)
 
 		// Run bubbletea program
 		p := tea.NewProgram(model,
@@ -53,5 +98,6 @@ Key bindings:
 }
 
 func init() {
+	dashboardCmd.Flags().Bool("split", false, "open dashboard with an interactive side-by-side terminal split")
 	rootCmd.AddCommand(dashboardCmd)
 }
