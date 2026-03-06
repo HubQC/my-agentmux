@@ -92,14 +92,18 @@ func LoadAgentDefinition(filePath string) (*AgentDefinition, error) {
 			return nil, err
 		}
 
-		if err := yaml.Unmarshal([]byte(frontmatter), def); err != nil {
+		decoder := yaml.NewDecoder(strings.NewReader(frontmatter))
+		decoder.KnownFields(true)
+		if err := decoder.Decode(def); err != nil {
 			return nil, fmt.Errorf("parsing frontmatter YAML: %w", err)
 		}
 
 		def.SystemPrompt = strings.TrimSpace(body)
 	} else if strings.HasSuffix(filePath, ".yaml") || strings.HasSuffix(filePath, ".yml") {
 		// Pure YAML file
-		if err := yaml.Unmarshal(data, def); err != nil {
+		decoder := yaml.NewDecoder(strings.NewReader(content))
+		decoder.KnownFields(true)
+		if err := decoder.Decode(def); err != nil {
 			return nil, fmt.Errorf("parsing YAML agent definition: %w", err)
 		}
 	} else {

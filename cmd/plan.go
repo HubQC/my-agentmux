@@ -25,13 +25,22 @@ var planCreateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		title := args[0]
 		description, _ := cmd.Flags().GetString("description")
+		agentDriven, _ := cmd.Flags().GetBool("agent-driven")
+
+		agentName := ""
+		if agentDriven {
+			agentName = os.Getenv("AGENTMUX_AGENT_NAME")
+			if agentName == "" {
+				return fmt.Errorf("AGENTMUX_AGENT_NAME environment variable not found (are you running inside an agent session?)")
+			}
+		}
 
 		store, err := workflow.NewPlanStore(cfg.PlansDir())
 		if err != nil {
 			return err
 		}
 
-		plan, err := store.Create(title, description)
+		plan, err := store.Create(title, description, agentName)
 		if err != nil {
 			return err
 		}
@@ -184,6 +193,7 @@ var planDeleteCmd = &cobra.Command{
 
 func init() {
 	planCreateCmd.Flags().StringP("description", "d", "", "plan description")
+	planCreateCmd.Flags().Bool("agent-driven", false, "automatically set agent name from environment")
 	planRejectCmd.Flags().StringP("reason", "r", "", "reason for rejection")
 
 	planCmd.AddCommand(planCreateCmd)

@@ -67,6 +67,27 @@ var builtinPresets = map[string]Preset{
 		DefaultArgs: []string{"copilot"},
 		CheckCmd:    "gh copilot --version",
 	},
+	"cline": {
+		Name:        "cline",
+		Description: "Cline — CLI coding agent",
+		Binary:      "cline",
+		DefaultArgs: []string{},
+		CheckCmd:    "cline --version",
+	},
+	"openhands": {
+		Name:        "openhands",
+		Description: "OpenHands — CLI wrapper for OpenHands",
+		Binary:      "openhands",
+		DefaultArgs: []string{},
+		CheckCmd:    "openhands --version",
+	},
+	"ollama": {
+		Name:        "ollama",
+		Description: "Ollama — Run large language models locally",
+		Binary:      "ollama",
+		DefaultArgs: []string{"run"},
+		CheckCmd:    "ollama --version",
+	},
 	"shell": {
 		Name:        "shell",
 		Description: "Plain shell session (bash/zsh)",

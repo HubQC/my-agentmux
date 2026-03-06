@@ -45,7 +45,7 @@ func TestPresetIsInstalled(t *testing.T) {
 
 func TestValidateAgentType(t *testing.T) {
 	// Valid presets
-	for _, name := range []string{"claude", "aider", "codex", "gemini", "copilot", "shell", "custom"} {
+	for _, name := range []string{"claude", "aider", "codex", "gemini", "copilot", "cline", "openhands", "ollama", "shell", "custom"} {
 		if err := ValidateAgentType(name); err != nil {
 			t.Errorf("expected %q to be valid, got: %v", name, err)
 		}
@@ -91,7 +91,7 @@ func TestFormatAgentCommand(t *testing.T) {
 
 func TestAvailablePresets(t *testing.T) {
 	presets := AvailablePresets()
-	for _, expected := range []string{"claude", "aider", "codex", "gemini"} {
+	for _, expected := range []string{"claude", "aider", "codex", "gemini", "cline", "openhands", "ollama"} {
 		if !strings.Contains(presets, expected) {
 			t.Errorf("expected %q in available presets: %q", expected, presets)
 		}
@@ -115,8 +115,8 @@ func TestGetPreset(t *testing.T) {
 
 func TestListPresets(t *testing.T) {
 	presets := ListPresets()
-	if len(presets) < 5 {
-		t.Errorf("expected at least 5 presets, got %d", len(presets))
+	if len(presets) < 8 {
+		t.Errorf("expected at least 8 presets, got %d", len(presets))
 	}
 }
 

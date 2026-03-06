@@ -111,14 +111,15 @@ CLI (cobra)
 
 ## Step 7 — Spec-Driven Workflow Engine
 
-**Goal:** Plan-file generation and approval workflow.
+**Goal:** Plan-file generation, approval workflow, and automated agent pipelines.
 
 **Files:**
 - `internal/workflow/spec.go` — manages plan→review→execute lifecycle, status tracking
 - `internal/workflow/spec_test.go`
 - `cmd/plan.go` — `plan create`, `plan list`, `plan approve`, `plan reject`
+- `cmd/pipeline.go` — `pipeline run <name>` for sequential agent orchestration
 
-**Verify:** `./agentmux plan create "Add auth" && ./agentmux plan list && go test ./internal/workflow/... -v`
+**Verify:** `./agentmux plan create "Add auth" && ./agentmux pipeline run my-pipeline && go test ./internal/workflow/... -v`
 
 ---
 
@@ -128,13 +129,18 @@ CLI (cobra)
 
 **Files:**
 - `internal/tui/app.go` — main bubbletea model (agent list + detail/log panel)
-- `internal/tui/components/agent_list.go` — agent sidebar
-- `internal/tui/components/log_viewer.go` — scrollable log viewer
+- `internal/tui/components/session_tree.go` — collapsible tree sidebar with group support
+- `internal/tui/components/agent_list.go` — agent sidebar (includes gopsutil resource tracking)
+- `internal/tui/components/log_viewer.go` — scrollable log viewer (with ANSI truncation)
 - `internal/tui/components/status_bar.go` — bottom bar
 - `internal/tui/styles.go` — lipgloss theme
-- `cmd/dashboard.go` — `agentmux dashboard`
+- `cmd/dashboard.go` — `agentmux dashboard` (with `--split` native tmux split pane mode)
 
-**Verify:** `./agentmux start agent1 --agent-type echo && ./agentmux dashboard`
+**Interactive Features:**
+- `app.go` uses `tea.ExecProcess(tmux attach-session...)` to allow fullscreen embedding where the dashboard drops down temporarily and yields output to the agent session.
+- `--split` mode uses `tmux split-window -h` natively and updates the right pane using `tmux respawn-pane` upon selection within the dashboard tree.
+
+**Verify:** `./agentmux start agent1 --agent-type echo && ./agentmux dashboard --split`
 
 ---
 

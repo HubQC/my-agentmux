@@ -362,3 +362,18 @@ $ make build   ✓ binary with ldflags
 | Packages | 10 |
 | CLI commands | 15 |
 | Sessions | 3 |
+
+---
+
+## Step 11: AgentMux v1.1 Enhancements ✅ (2026-03-05)
+
+### What was built
+- **Expanded Agent Ecosystem**: Added built-in presets for `cline`, `openhands`, and `ollama`.
+- **Strict Configuration Schema Validation**: `yaml.UnmarshalStrict` integration to enforce correct YAML fields in agent definitions.
+- **Agent Roles Pipelines**: Sequential orchestration of agents configured via `pipelines` in `.agentmux/config.yaml`, launched with `agentmux pipeline run`.
+- **Agent-Driven Plans**: Added `--agent-driven` flag to `agentmux plan create` allowing agents to natively trigger workflows identifying themselves from injected env vars.
+- **TUI CPU/Memory Monitoring**: Added `github.com/shirou/gopsutil` CPU and memory monitoring to the bubbletea dashboard.
+- **TUI ANSI Formatting**: Implemented `github.com/charmbracelet/x/ansi` log output truncation to perfectly preserve CLI colors without visual glitching.
+- **Tree-Style Session Navigator**: Replaced flat agent list with collapsible `SessionTree` component grouped by workdir (default), explicit `--group` flag, or project config `groups:` map. Supports mouse click and keyboard (Enter/←/→) navigation.
+
+### Tests: Up to 74 passing tests.

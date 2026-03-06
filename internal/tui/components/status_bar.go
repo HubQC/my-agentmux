@@ -50,8 +50,10 @@ func (sb StatusBar) Render() string {
 	keys := []struct{ key, desc string }{
 		{"↑/k", "up"},
 		{"↓/j", "down"},
+		{"Enter", "select"},
+		{"←/→", "fold"},
 		{"pgup/pgdn", "scroll"},
-		{"a", "attach"},
+		{"a", "embed"},
 		{"d", "stop"},
 		{"q", "quit"},
 	}

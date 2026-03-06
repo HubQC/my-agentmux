@@ -31,6 +31,7 @@ type LaunchOptions struct {
 	ExtraArgs []string
 	Env       map[string]string
 	Command   string // override: use this exact command instead of preset
+	Group     string // optional group for tree-style session view
 }
 
 // Launch starts an agent CLI in a new tmux session.
@@ -77,6 +78,13 @@ func (r *Runner) Launch(ctx context.Context, opts LaunchOptions) (*session.Agent
 		command = ""
 	}
 
+	// Always inject basic AgentMux env variables
+	if opts.Env == nil {
+		opts.Env = make(map[string]string)
+	}
+	opts.Env["AGENTMUX_AGENT_NAME"] = opts.Name
+	opts.Env["AGENTMUX_SESSION_PREFIX"] = r.cfg.SessionPrefix
+
 	// Create the session via session manager
 	createOpts := session.CreateOptions{
 		Name:      opts.Name,
@@ -84,6 +92,7 @@ func (r *Runner) Launch(ctx context.Context, opts LaunchOptions) (*session.Agent
 		WorkDir:   opts.WorkDir,
 		Command:   command,
 		Env:       opts.Env,
+		Group:     opts.Group,
 	}
 
 	agentSession, err := r.sessionMgr.Create(ctx, createOpts)

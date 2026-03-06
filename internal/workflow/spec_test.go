@@ -9,7 +9,7 @@ import (
 func TestCreatePlan(t *testing.T) {
 	store := newTestStore(t)
 
-	plan, err := store.Create("Add authentication", "Implement OAuth2 login flow")
+	plan, err := store.Create("Add authentication", "Implement OAuth2 login flow", "")
 	if err != nil {
 		t.Fatalf("failed to create plan: %v", err)
 	}
@@ -40,7 +40,7 @@ func TestCreatePlan(t *testing.T) {
 func TestCreatePlanEmptyTitle(t *testing.T) {
 	store := newTestStore(t)
 
-	_, err := store.Create("", "description")
+	_, err := store.Create("", "description", "")
 	if err == nil {
 		t.Error("expected error for empty title")
 	}
@@ -49,9 +49,9 @@ func TestCreatePlanEmptyTitle(t *testing.T) {
 func TestListPlans(t *testing.T) {
 	store := newTestStore(t)
 
-	_, _ = store.Create("Plan A", "First plan")
-	_, _ = store.Create("Plan B", "Second plan")
-	_, _ = store.Create("Plan C", "Third plan")
+	_, _ = store.Create("Plan A", "First plan", "")
+	_, _ = store.Create("Plan B", "Second plan", "")
+	_, _ = store.Create("Plan C", "Third plan", "")
 
 	plans, err := store.List()
 	if err != nil {
@@ -74,7 +74,7 @@ func TestListPlans(t *testing.T) {
 func TestGetPlan(t *testing.T) {
 	store := newTestStore(t)
 
-	created, _ := store.Create("Test plan", "")
+	created, _ := store.Create("Test plan", "", "")
 
 	plan, err := store.Get(created.ID)
 	if err != nil {
@@ -94,7 +94,7 @@ func TestGetPlan(t *testing.T) {
 func TestApprovePlan(t *testing.T) {
 	store := newTestStore(t)
 
-	plan, _ := store.Create("Approve me", "")
+	plan, _ := store.Create("Approve me", "", "")
 
 	if err := store.Approve(plan.ID); err != nil {
 		t.Fatalf("failed to approve: %v", err)
@@ -112,7 +112,7 @@ func TestApprovePlan(t *testing.T) {
 func TestRejectPlan(t *testing.T) {
 	store := newTestStore(t)
 
-	plan, _ := store.Create("Reject me", "")
+	plan, _ := store.Create("Reject me", "", "")
 
 	if err := store.Reject(plan.ID, "Needs more detail"); err != nil {
 		t.Fatalf("failed to reject: %v", err)
@@ -130,7 +130,7 @@ func TestRejectPlan(t *testing.T) {
 func TestApproveNonDraft(t *testing.T) {
 	store := newTestStore(t)
 
-	plan, _ := store.Create("Already done", "")
+	plan, _ := store.Create("Already done", "", "")
 	_ = store.Approve(plan.ID)
 
 	// Trying to approve again should fail
@@ -140,7 +140,7 @@ func TestApproveNonDraft(t *testing.T) {
 	}
 
 	// Create another and reject, then try to approve
-	plan2, _ := store.Create("Rejected one", "")
+	plan2, _ := store.Create("Rejected one", "", "")
 	_ = store.Reject(plan2.ID, "no")
 
 	err = store.Approve(plan2.ID)
@@ -152,7 +152,7 @@ func TestApproveNonDraft(t *testing.T) {
 func TestDeletePlan(t *testing.T) {
 	store := newTestStore(t)
 
-	plan, _ := store.Create("Delete me", "")
+	plan, _ := store.Create("Delete me", "", "")
 
 	if err := store.Delete(plan.ID); err != nil {
 		t.Fatalf("failed to delete: %v", err)
@@ -180,12 +180,12 @@ func TestDeletePlan(t *testing.T) {
 func TestPlanIDSequence(t *testing.T) {
 	store := newTestStore(t)
 
-	p1, _ := store.Create("First", "")
+	p1, _ := store.Create("First", "", "")
 	if p1.ID != "plan-001" {
 		t.Errorf("expected plan-001, got %q", p1.ID)
 	}
 
-	p2, _ := store.Create("Second", "")
+	p2, _ := store.Create("Second", "", "")
 	if p2.ID != "plan-002" {
 		t.Errorf("expected plan-002, got %q", p2.ID)
 	}
@@ -194,7 +194,7 @@ func TestPlanIDSequence(t *testing.T) {
 	_ = store.Delete("plan-001")
 
 	// Next should be plan-003 (no ID reuse)
-	p3, _ := store.Create("Third", "")
+	p3, _ := store.Create("Third", "", "")
 	if p3.ID != "plan-003" {
 		t.Errorf("expected plan-003 (no reuse), got %q", p3.ID)
 	}

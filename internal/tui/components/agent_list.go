@@ -15,6 +15,9 @@ type AgentInfo struct {
 	Status    string // "running", "stopped"
 	WorkDir   string
 	CreatedAt time.Time
+	CPU       float64
+	Memory    uint64
+	Group     string
 }
 
 // AgentList renders a sidebar list of agents.
@@ -100,6 +103,12 @@ func (al AgentList) Render() string {
 		// Detail line
 		uptime := formatUptime(agent.CreatedAt)
 		detail := typeStyle.Render(agent.Type) + " " + uptimeStyle.Render(uptime)
+
+		if agent.Status == "running" && (agent.CPU > 0 || agent.Memory > 0) {
+			memMB := float64(agent.Memory) / 1024 / 1024
+			metrics := fmt.Sprintf(" [%.1f%% CPU | %.1f MB] ", agent.CPU, memMB)
+			detail += lipgloss.NewStyle().Foreground(lipgloss.Color("#6366F1")).Render(metrics)
+		}
 
 		var entry string
 		if i == al.Selected {

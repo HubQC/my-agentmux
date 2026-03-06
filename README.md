@@ -8,6 +8,7 @@
 
 - **Multi-Agent Sessions** — Run Claude Code, Aider, Codex, Gemini CLI, or any CLI agent in isolated tmux sessions
 - **Real-Time Dashboard** — Monitor all agents with a beautiful bubbletea TUI
+- **Tree-Style Session Navigator** — Collapsible, grouped sidebar with mouse click support
 - **Live Output Streaming** — Watch agent output in real-time with `logs --follow`
 - **Inter-Agent Communication** — Send messages between agents via `send`
 - **Workflow Plans** — Create, approve, and reject spec-driven workflow plans
@@ -47,7 +48,7 @@ agentmux dashboard
 
 | Command | Description |
 |---------|-------------|
-| `agentmux start <name>` | Start a new agent session |
+| `agentmux start <name>` | Start a new agent session (`-g` to assign group) |
 | `agentmux list` | List all agent sessions |
 | `agentmux stop <name\|--all>` | Stop agent session(s) |
 | `agentmux attach <name>` | Attach to an agent's tmux session |
@@ -55,10 +56,11 @@ agentmux dashboard
 | `agentmux send <name> <msg>` | Send input to an agent |
 | `agentmux agents [--all]` | List available agent types |
 | `agentmux dashboard` | Open the real-time TUI dashboard |
-| `agentmux plan create <title>` | Create a workflow plan |
+| `agentmux plan create <title>` | Create a workflow plan (use `--agent-driven` if inside an agent) |
 | `agentmux plan list` | List all plans |
 | `agentmux plan approve <id>` | Approve a plan |
 | `agentmux plan reject <id>` | Reject a plan |
+| `agentmux pipeline run <name>` | Run an orchestrated sequence of agents |
 | `agentmux init` | Initialize configuration |
 | `agentmux completion <shell>` | Generate shell completions |
 | `agentmux version` | Show version info |
@@ -74,6 +76,9 @@ Built-in presets:
 | `codex` | `codex` | OpenAI Codex CLI |
 | `gemini` | `gemini` | Google Gemini CLI |
 | `copilot` | `github-copilot-cli` | GitHub Copilot |
+| `cline` | `cline` | Cline Autonomous Agent |
+| `openhands` | `openhands` | OpenHands AI Agent |
+| `ollama` | `ollama` | Local LLM CLI (`ollama run ...`) |
 | `shell` | — | Plain shell session |
 
 ### Custom Agent Definitions
@@ -125,6 +130,16 @@ agents:
   reviewer:
     agent_type: claude
     args: ["--verbose"]
+pipelines:
+  test-pipeline:
+    - claude
+    - aider
+groups:
+  frontend:
+    - react-coder
+    - style-reviewer
+  backend:
+    - api-coder
 ```
 
 ## Dashboard
@@ -133,19 +148,26 @@ The TUI dashboard provides a real-time view of all running agents:
 
 ```
 ┌──────────────────────┐┌─────────────────────────────────────────┐
-│ ⚡ AGENTS             ││ 📋 MY-CODER                             │
+│ 🌳 SESSIONS           ││ 📋 MY-CODER                             │
 │ ──────────────────── ││ ─────────────────────────────────────── │
-│ ● my-coder           ││ Working on authentication module...     │
-│   claude 5m          ││ Created auth.go with JWT middleware     │
-│ ● reviewer           ││ Running tests...                        │
-│   claude 2m          ││ All 12 tests pass ✓                     │
-│ ○ helper             ││                                         │
-│   shell -            ││                                         │
+│ ▼ my-project (2)     ││ Working on authentication module...     │
+│   ● my-coder         ││ Created auth.go with JWT middleware     │
+│     [8.5% CPU | 45MB]││                                         │
+│   ● reviewer         ││ Running tests...                        │
+│     [2.1% CPU | 30MB]││ All 12 tests pass ✓                     │
+│ ▸ /tmp (1)           ││                                         │
+│                      ││                                         │
 └──────────────────────┘└─────────────────────────────────────────┘
- ↑/k up │ ↓/j down │ pgup/pgdn scroll │ a attach │ d stop │ q quit  2/3 agents
+ ↑/k up │ ↓/j down │ Enter select │ ←/→ fold │ a attach │ q quit  2/3 agents
 ```
 
-**Keyboard shortcuts:** ↑/k ↓/j navigate, pgup/pgdn scroll logs, `a` attach, `d` stop, `q` quit.
+**Keyboard shortcuts:** `↑/k` `↓/j` navigate, `Enter` select/toggle, `←/→` collapse/expand, `pgup/pgdn` scroll logs, `d` stop, `q` quit.
+
+**Interactive Sessions:**
+- Press `a` on an agent to instantly embed that tmux session fullscreen inside the dashboard. Press `Ctrl+b` then `d` to detach and return.
+- Run `agentmux dashboard --split` to launch a Vim-style side-by-side split. The dashboard runs on the left, and pressing `Enter` on a session instantly switches the right terminal pane to that interactive agent.
+
+**Mouse:** Click on sessions to select, click on groups to collapse/expand.
 
 ## Development
 

@@ -32,6 +32,7 @@ If a custom agent definition exists with the given name (in
 		extraArgs, _ := cmd.Flags().GetStringSlice("args")
 		customCmd, _ := cmd.Flags().GetString("command")
 		projectConfig, _ := cmd.Flags().GetString("config")
+		group, _ := cmd.Flags().GetString("group")
 
 		// Apply project-level config if specified
 		activeCfg := cfg
@@ -97,6 +98,7 @@ If a custom agent definition exists with the given name (in
 			ExtraArgs: extraArgs,
 			Command:   customCmd,
 			Env:       env,
+			Group:     group,
 		}
 
 		agentSession, err := runner.Launch(cmd.Context(), opts)
@@ -129,6 +131,7 @@ func init() {
 	startCmd.Flags().StringSliceP("args", "a", nil, "extra arguments to pass to the agent CLI")
 	startCmd.Flags().StringP("command", "c", "", "custom command to run (overrides agent type preset)")
 	startCmd.Flags().String("config", "", "project-level config file path")
+	startCmd.Flags().StringP("group", "g", "", "assign session to a group for the tree view")
 
 	rootCmd.AddCommand(startCmd)
 }

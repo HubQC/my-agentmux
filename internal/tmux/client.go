@@ -363,3 +363,23 @@ func (c *Client) getTargetSize(ctx context.Context, target string, horizontal bo
 
 	return size, nil
 }
+
+// GetPanePID returns the system process ID of the process running in the target pane.
+func (c *Client) GetPanePID(ctx context.Context, target string) (int, error) {
+	args := []string{"display-message", "-p", "-F", "#{pane_pid}"}
+	if target != "" {
+		args = []string{"display-message", "-t", target, "-p", "-F", "#{pane_pid}"}
+	}
+
+	output, err := c.run(ctx, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	pid, err := strconv.Atoi(strings.TrimSpace(output))
+	if err != nil {
+		return 0, fmt.Errorf("parsing pane PID %q: %w", output, err)
+	}
+
+	return pid, nil
+}

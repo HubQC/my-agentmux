@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 )
 
 // LogViewer renders a scrollable log panel for an agent.
@@ -68,10 +69,9 @@ func (lv LogViewer) Render() string {
 
 		var b strings.Builder
 		for _, line := range lv.Lines[startIdx:endIdx] {
-			// Truncate long lines
-			if len(line) > lv.Width-4 {
-				line = line[:lv.Width-7] + "..."
-			}
+			// Truncate long lines while preserving ANSI sequences and wide characters
+			line = ansi.Truncate(line, lv.Width-4, "...")
+			
 			b.WriteString(contentStyle.Render(line))
 			b.WriteString("\n")
 		}

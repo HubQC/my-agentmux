@@ -43,7 +43,7 @@ func DefaultConfig() *Config {
 	homeDir, _ := os.UserHomeDir()
 	return &Config{
 		DataDir:          filepath.Join(homeDir, ".agentmux"),
-		DefaultAgentType: "claude",
+		DefaultAgentType: "codex",
 		TmuxBinary:       "tmux",
 		SessionPrefix:    "amux",
 		LogLevel:         "info",
