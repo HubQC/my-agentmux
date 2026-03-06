@@ -18,6 +18,12 @@
 - **Shell Completions** — Full bash/zsh/fish/powershell completions
 - **Cross-Platform** — WSL and Docker detection with platform-specific adaptations
 
+## Prerequisites
+
+- **Go** (1.21 or later) — required to build from source
+- **tmux** — required for agent session isolation
+- Your preferred CLI AI agents (e.g. `npm install -g @antigravity/codex`)
+
 ## Quick Start
 
 ```bash
