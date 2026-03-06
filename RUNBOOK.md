@@ -154,6 +154,7 @@ agentmux dashboard
 - **Tree-Style Sidebar**: Agents are grouped by their explicit `--group`, their project config group, or their working directory.
 - **Resource Monitoring**: Live CPU (%) and Memory (MB) usage for every agent.
 - **Live Output**: Real-time log streaming for the selected agent. ANSI formatting and colors are perfectly preserved.
+- **Side-by-Side Split Mode**: Run `agentmux dashboard --split` to launch the dashboard alongside a persistent interactive tmux terminal. Press `Enter` on an agent to instantly snap the right pane to that interactive session.
 
 ### Dashboard Controls:
 - **`↑`/`k`, `↓`/`j`**: Navigate between sessions and groups
