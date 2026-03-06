@@ -2,6 +2,7 @@ package tui
 
 import (
 	"context"
+	"fmt"
 	"os/exec"
 	"strings"
 	"time"
@@ -44,6 +45,10 @@ type Model struct {
 	// Project groups for tree grouping.
 	projectGroups map[string][]string
 
+	// Split mode
+	splitMode   bool
+	rightPaneID string
+
 	width  int
 	height int
 
@@ -51,13 +56,18 @@ type Model struct {
 }
 
 // NewModel creates the dashboard model.
-func NewModel(cfg *config.Config, sessionMgr *session.Manager, tmuxClient *tmux.Client) Model {
+func NewModel(cfg *config.Config, sessionMgr *session.Manager, tmuxClient *tmux.Client, splitMode bool, rightPaneID string, projectGroups *config.ProjectConfig) Model {
 	logger, _ := monitor.NewLogger(cfg.LogsDir(), cfg.Monitor.MaxLogSizeMB)
 	watcher := monitor.NewWatcher(tmuxClient, logger, cfg.Monitor.PollIntervalMs)
 
+	var pGroups map[string][]string
+	if projectGroups != nil {
+		pGroups = projectGroups.Groups
+	}
+
 	return Model{
-		cfg:        cfg,
-		sessionMgr: sessionMgr,
+		cfg:            cfg,
+		sessionMgr:     sessionMgr,
 		watcher:        watcher,
 		tmuxClient:     tmuxClient,
 		sessionTree:    components.NewSessionTree(),
@@ -65,6 +75,9 @@ func NewModel(cfg *config.Config, sessionMgr *session.Manager, tmuxClient *tmux.
 		statusBar:      components.NewStatusBar(),
 		agentLogs:      make(map[string][]string),
 		agentResources: make(map[string]monitor.ResourceEvent),
+		splitMode:      splitMode,
+		rightPaneID:    rightPaneID,
+		projectGroups:  pGroups,
 	}
 }
 
@@ -101,8 +114,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			node := m.sessionTree.SelectedNode()
 			if node != nil && node.IsGroup {
 				m.sessionTree.Toggle()
-			} else {
-				m.syncLogViewer()
+			} else if agent := m.sessionTree.SelectedAgent(); agent != nil {
+				if m.splitMode && m.rightPaneID != "" && agent.Status == "running" {
+					// In split mode, instantly attach the right pane to this session
+					tmuxSession := m.cfg.SessionPrefix + "-" + agent.Name
+					// Use env -u TMUX so nested attach works cleanly
+					cmdStr := fmt.Sprintf("env -u TMUX %s attach-session -t %s", m.cfg.TmuxBinary, tmuxSession)
+					_ = exec.Command(m.cfg.TmuxBinary, "respawn-pane", "-k", "-t", m.rightPaneID, cmdStr).Run()
+				} else {
+					m.syncLogViewer()
+				}
 			}
 			return m, nil
 
@@ -216,14 +237,18 @@ func (m Model) View() string {
 
 	// Render components
 	sidebar := m.sessionTree.Render()
-	logPanel := m.logViewer.Render()
-	statusBar := m.statusBar.Render()
 
-	// Layout: sidebar | log panel
-	mainArea := lipgloss.JoinHorizontal(lipgloss.Top, sidebar, logPanel)
+	var rendered string
+	if m.splitMode {
+		// In split mode, the right pane is an actual tmux pane, so we only render the sidebar and status
+		rendered = lipgloss.JoinVertical(lipgloss.Left, sidebar, m.statusBar.Render())
+	} else {
+		logPanel := m.logViewer.Render()
+		mainArea := lipgloss.JoinHorizontal(lipgloss.Top, sidebar, logPanel)
+		rendered = lipgloss.JoinVertical(lipgloss.Left, mainArea, m.statusBar.Render())
+	}
 
-	// Stack: main | status bar
-	return lipgloss.JoinVertical(lipgloss.Left, mainArea, statusBar)
+	return rendered
 }
 
 // refreshAgents refreshes the agent list from the session manager.
@@ -296,11 +321,14 @@ func (m *Model) syncLogViewer() {
 // updateLayout recalculates component sizes for the current terminal size.
 func (m *Model) updateLayout() {
 	sidebarWidth := 30
-	if m.width < 80 {
-		sidebarWidth = 24
+	if m.splitMode {
+		// Take full width of its pane
+		sidebarWidth = m.width
+	} else if m.width < 100 {
+		sidebarWidth = 25
 	}
-
-	mainHeight := m.height - 1 // status bar takes 1 row
+	
+	mainHeight := m.height - 1 // Leave 1 line for status bar
 	if mainHeight < 5 {
 		mainHeight = 5
 	}
@@ -310,7 +338,7 @@ func (m *Model) updateLayout() {
 
 	m.logViewer.Width = m.width - sidebarWidth
 	m.logViewer.Height = mainHeight
-
+	
 	m.statusBar.Width = m.width
 }
 
