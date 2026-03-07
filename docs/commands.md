@@ -21,6 +21,11 @@ List all available agent types, including built-in presets and custom agent defi
 - **Flags**:
   - `-a, --all`: Show all presets including uninstalled ones.
 
+### `codex`
+Dive deeply into your Codex configurations natively in `agentmux`. Parses `~/.codex/config.toml` (and project overrides) to act as an advisor, analyzing available Codex Profiles / sub-agent roles (like `reasoning: high` or descriptions) and rendering advice on what commands to use.
+
+- **Usage**: `agentmux codex`
+
 ### `attach`
 Attach the current terminal to a running agent's tmux session.
 

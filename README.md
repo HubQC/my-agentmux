@@ -62,6 +62,7 @@ agentmux dashboard
 | `agentmux logs <name> [-f]` | View agent output (with follow mode) |
 | `agentmux send <name> <msg>` | Send input to an agent |
 | `agentmux agents [--all]` | List available agent types |
+| `agentmux codex` | Show interactive assistance on your Codex configs |
 | `agentmux dashboard` | Open the real-time TUI dashboard |
 | `agentmux plan create <title>` | Create a workflow plan (use `--agent-driven` if inside an agent) |
 | `agentmux plan list` | List all plans |
@@ -192,6 +193,7 @@ make install    # Install to $GOPATH/bin
 ## Documentation
 
 - [CLI Command Guide](docs/commands.md) — Detailed reference for all commands and options
+- [Codex Integration Guide](docs/CODEX.md) — Detailed examples of launching Codex configurations
 - [Design Overview](docs/DESIGN.md) — Architecture and internal design principles
 - [Development Runbook](docs/RUNBOOK.md) — Guides for common development tasks
 - [Build Walkthrough](docs/WALKTHROUGH.md) — Step-by-step history of the project build
