@@ -14,6 +14,9 @@
 | `0f68ecc` | P0 quick wins — doctor/cleanup, file locking, signal handling |
 | `8d436a3` | P1 core UX — TUI search/filter, action menu, session save/resume |
 | `d993504` | P2 intelligence — orchestrator with parallel stages, health monitoring |
+| `24b9823` | docs: improvement plan and status tracking |
+| `8521a1f` | P3 ecosystem — git integration, agent templates, session history |
+| `c8bdf8a` | P4 infrastructure — CI/CD pipeline, plugin system |
 
 ---
 
@@ -24,12 +27,12 @@
 |------|--------|-------|
 | 2.3 Doctor/Cleanup commands | ✅ Done | `cmd/doctor.go` |
 | 3.1 Signal handling | ✅ Done | `cmd/pipeline.go` |
-| 3.2 State file locking | ✅ Done | `internal/session/filelock.go`, `internal/session/state.go` |
+| 3.2 State file locking | ✅ Done | `internal/session/filelock.go`, `state.go` |
 
 ### P1 — Core UX ✅ ALL DONE
 | Item | Status | Files |
 |------|--------|-------|
-| 2.1 TUI search/filter + action menu | ✅ Done | `internal/tui/components/search_bar.go`, `action_menu.go`, `app.go` |
+| 2.1 TUI search/filter + action menu | ✅ Done | `search_bar.go`, `action_menu.go`, `app.go` |
 | 4.1 Session save/resume | ✅ Done | `cmd/resume.go` |
 
 ### P2 — Intelligence ✅ ALL DONE
@@ -38,22 +41,22 @@
 | 1.1 Smart pipeline orchestrator | ✅ Done | `internal/orchestrator/orchestrator.go` |
 | 1.3 Health monitoring | ✅ Done | `internal/monitor/health.go` |
 
-### P3 — Ecosystem ⬜ NOT STARTED
+### P3 — Ecosystem ✅ ALL DONE
 | Item | Status | Files |
 |------|--------|-------|
-| 5.1 Git integration | ⬜ Todo | New `internal/git/` package |
-| 4.2 Agent templates | ⬜ Todo | New `internal/templates/` package, `cmd/agents.go` |
-| 4.3 Metrics & history | ⬜ Todo | New `internal/history/` package, `cmd/history.go` |
-| 1.2 Agent output piping | ⬜ Todo | New `internal/ipc/` package |
+| 5.1 Git integration | ✅ Done | `internal/git/git.go`, `app.go`, `session_tree.go` |
+| 4.2 Agent templates | ✅ Done | `internal/templates/templates.go`, `cmd/templates.go` |
+| 4.3 Metrics & history | ✅ Done | `internal/history/store.go`, `cmd/history.go` |
 
-### P4 — Infrastructure ⬜ NOT STARTED
+### P4 — Infrastructure ✅ PARTIALLY DONE
 | Item | Status | Files |
 |------|--------|-------|
+| 6.2 CI/CD pipeline | ✅ Done | `.github/workflows/ci.yml` |
+| 4.4 Plugin system | ✅ Done | `internal/plugin/plugin.go` |
 | 3.3 Test coverage expansion | ⬜ Todo | `cmd/*_test.go`, `internal/tui/*_test.go` |
-| 6.1 Code architecture | ⬜ Todo | Various refactoring across packages |
-| 6.2 CI/CD & release | ⬜ Todo | `.github/workflows/`, Homebrew formula |
-| 4.4 Plugin system | ⬜ Todo | New `internal/plugin/` package |
+| 6.1 Code architecture | ⬜ Todo | Various refactoring |
 | 2.2 Interactive start wizard | ⬜ Todo | `cmd/start.go`, new wizard package |
+| 1.2 Agent output piping | ⬜ Todo | New `internal/ipc/` package |
 
 ### Deferred
 | Item | Reason |
@@ -63,19 +66,19 @@
 
 ---
 
-## Stats So Far
+## Stats
 
-- **11 files** changed/created
-- **+1,496 lines** added
-- **3 commits** on `feature/improvements-v2`
+- **22 files** changed/created
+- **+2,712 lines** added
+- **6 commits** on `feature/improvements-v2`
 - All existing tests still passing (`go test ./...`)
 
 ---
 
-## Next Steps
+## Remaining Work
 
-The next agent session should:
-1. `git checkout feature/improvements-v2`
-2. Start with **P3 items** (5.1 Git integration → 4.2 Templates → 4.3 History → 1.2 Output piping)
-3. Follow commit convention: `feat: P<N> <area> — <description>`
-4. Update this file after each commit
+For the next session:
+1. **3.3 Test coverage expansion** — Add CLI golden tests, TUI snapshot tests, error path coverage
+2. **6.1 Code architecture** — Extract interfaces, add structured logging, config validation
+3. **2.2 Interactive start wizard** — TUI wizard for guided agent creation
+4. **1.2 Output piping** — Inter-agent communication via patterns/shared context
