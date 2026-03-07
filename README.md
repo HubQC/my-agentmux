@@ -8,7 +8,7 @@
 
 - **Multi-Agent Sessions** — Run Claude Code, Aider, Codex, Gemini CLI, or any CLI agent in isolated tmux sessions
 - **Real-Time Dashboard** — Monitor all agents with a beautiful bubbletea TUI
-- **Deep Codex Integration** — Natively parses `~/.codex/config.toml` to show active profiles (`gpt-5.3-codex`), reasoning efforts, multi-agent roles, and active MCP servers right in the TUI.
+- **Deep Codex Integration** — Display active profiles, reasoning efforts, and MCP servers for Codex agents in the TUI.
 - **Tree-Style Session Navigator** — Collapsible, grouped sidebar with mouse click support
 - **Live Output Streaming** — Watch agent output in real-time with `logs --follow`
 - **Inter-Agent Communication** — Send messages between agents via `send`
@@ -151,7 +151,7 @@ groups:
 
 ## Dashboard
 
-The TUI dashboard provides a real-time view of all running agents, including deep native integration with Codex configurations.
+The TUI dashboard provides a real-time view of all running agents, including deep native integration displaying Codex configurations.
 
 ```
 ┌──────────────────────┐┌─────────────────────────────────────────┐

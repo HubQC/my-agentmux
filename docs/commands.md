@@ -15,7 +15,7 @@ These flags can be used with any command:
 ## Commands
 
 ### `agents`
-List all available agent types, including built-in presets and custom agent definitions. Extra context is dynamically appended if `~/.codex/config.toml` is found, exposing available Codex Profiles (e.g. `gpt-5.3-codex`) and sub-agent task definitions (e.g. `supervisor`, `task_planner`).
+List all available agent types, including built-in presets and custom agent definitions. Also lists Codex profiles and sub-agents from `~/.codex/config.toml` if found.
 
 - **Usage**: `agentmux agents [flags]`
 - **Flags**:
@@ -95,6 +95,6 @@ Stop and remove one or all agent sessions.
   - `-a, --all`: Stop all running agent sessions.
 
 ### `dashboard`
-Open the real-time TUI dashboard to monitor and manage all agents. Automatically detects and natively parses `~/.codex/config.toml` for `codex` type agents, visualizing active MCP servers, Profiles, and reasoning efforts inline.
+Open the real-time TUI dashboard to monitor and manage all agents. For `codex` agents, it natively displays active profiles, reasoning effort, and MCP servers.
 
 - **Usage**: `agentmux dashboard`
