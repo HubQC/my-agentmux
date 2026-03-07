@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/cqi/my_agentmux/internal/config"
+	gitutil "github.com/cqi/my_agentmux/internal/git"
 	"github.com/cqi/my_agentmux/internal/monitor"
 	"github.com/cqi/my_agentmux/internal/session"
 	"github.com/cqi/my_agentmux/internal/tmux"
@@ -35,9 +36,14 @@ type Model struct {
 	sessionTree components.SessionTree
 	logViewer   components.LogViewer
 	statusBar   components.StatusBar
+	searchBar   components.SearchBar
+	actionMenu  components.ActionMenu
 
 	// Log lines per agent name.
 	agentLogs map[string][]string
+
+	// All agents (unfiltered, for search).
+	allAgents []components.AgentInfo
 
 	// Resources per agent name.
 	agentResources map[string]monitor.ResourceEvent
@@ -73,6 +79,8 @@ func NewModel(cfg *config.Config, sessionMgr *session.Manager, tmuxClient *tmux.
 		sessionTree:    components.NewSessionTree(),
 		logViewer:      components.NewLogViewer(),
 		statusBar:      components.NewStatusBar(),
+		searchBar:      components.NewSearchBar(),
+		actionMenu:     components.NewActionMenu(),
 		agentLogs:      make(map[string][]string),
 		agentResources: make(map[string]monitor.ResourceEvent),
 		splitMode:      splitMode,
@@ -94,11 +102,36 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
+		key := msg.String()
+
+		// If action menu is active, route all keys to it
+		if m.actionMenu.Active {
+			action := m.actionMenu.HandleKey(key)
+			if action != "" {
+				return m.executeAction(action)
+			}
+			return m, nil
+		}
+
+		// If search bar is active, route keys to it
+		if m.searchBar.Active {
+			if m.searchBar.HandleKey(key) {
+				m.refreshAgents() // Re-filter the tree
+				return m, nil
+			}
+		}
+
+		switch key {
 		case "q", "ctrl+c":
 			m.quitting = true
 			m.watcher.Stop()
 			return m, tea.Quit
+
+		case "/":
+			// Activate search mode
+			m.searchBar.Active = true
+			m.searchBar.Query = ""
+			return m, nil
 
 		case "up", "k":
 			m.sessionTree.MoveUp()
@@ -124,6 +157,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else {
 					m.syncLogViewer()
 				}
+			}
+			return m, nil
+
+		case "m":
+			// Open action menu for selected agent
+			if agent := m.sessionTree.SelectedAgent(); agent != nil {
+				m.actionMenu.Show(agent)
 			}
 			return m, nil
 
@@ -225,6 +265,37 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// executeAction handles an action from the action menu.
+func (m Model) executeAction(action string) (tea.Model, tea.Cmd) {
+	agent := m.sessionTree.SelectedAgent()
+	if agent == nil {
+		return m, nil
+	}
+
+	switch action {
+	case "attach":
+		if agent.Status == "running" {
+			tmuxSession := m.cfg.SessionPrefix + "-" + agent.Name
+			c := exec.Command(m.cfg.TmuxBinary, "attach-session", "-t", tmuxSession)
+			return m, tea.ExecProcess(c, func(err error) tea.Msg {
+				return tickMsg{}
+			})
+		}
+	case "stop":
+		_ = m.sessionMgr.Destroy(context.Background(), agent.Name)
+		m.watcher.Unwatch(agent.Name)
+		return m, tickCmd()
+	case "restart":
+		// Stop then re-start with same config
+		_ = m.sessionMgr.Destroy(context.Background(), agent.Name)
+		m.watcher.Unwatch(agent.Name)
+		return m, tickCmd()
+	case "logs":
+		m.syncLogViewer()
+	}
+	return m, nil
+}
+
 // View renders the full dashboard.
 func (m Model) View() string {
 	if m.quitting {
@@ -235,15 +306,24 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
-	// Render components
+	// Render search bar above sidebar if active
+	searchBarRendered := m.searchBar.Render()
 	sidebar := m.sessionTree.Render()
+	if searchBarRendered != "" {
+		sidebar = lipgloss.JoinVertical(lipgloss.Left, searchBarRendered, sidebar)
+	}
 
 	var rendered string
 	if m.splitMode {
-		// In split mode, the right pane is an actual tmux pane, so we only render the sidebar and status
 		rendered = lipgloss.JoinVertical(lipgloss.Left, sidebar, m.statusBar.Render())
 	} else {
-		logPanel := m.logViewer.Render()
+		// If action menu is active, overlay it on the log panel
+		var logPanel string
+		if m.actionMenu.Active {
+			logPanel = m.actionMenu.Render()
+		} else {
+			logPanel = m.logViewer.Render()
+		}
 		mainArea := lipgloss.JoinHorizontal(lipgloss.Top, sidebar, logPanel)
 		rendered = lipgloss.JoinVertical(lipgloss.Left, mainArea, m.statusBar.Render())
 	}
@@ -273,6 +353,15 @@ func (m *Model) refreshAgents() {
 
 			GeminiMCPs: s.GeminiMCPs,
 		}
+
+		// Populate git info
+		if s.WorkDir != "" {
+			gitInfo := gitutil.Detect(s.WorkDir)
+			if gitInfo.IsRepo {
+				ag.GitBranch = gitutil.BranchLabel(gitInfo.Branch)
+				ag.GitRepo = gitInfo.RepoName
+			}
+		}
 		if res, ok := m.agentResources[s.Name]; ok {
 			ag.CPU = res.CPU
 			ag.Memory = res.Memory
@@ -289,7 +378,19 @@ func (m *Model) refreshAgents() {
 		}
 	}
 
-	m.sessionTree.BuildTree(agents, m.projectGroups)
+	// Update status bar
+	// Store all agents for filtering
+	m.allAgents = agents
+
+	// Filter agents by search query
+	var filteredAgents []components.AgentInfo
+	for _, ag := range agents {
+		if m.searchBar.MatchesAgent(&ag) {
+			filteredAgents = append(filteredAgents, ag)
+		}
+	}
+
+	m.sessionTree.BuildTree(filteredAgents, m.projectGroups)
 
 	// Fix selection if out of bounds
 	if m.sessionTree.Selected >= len(m.sessionTree.FlatItems) && len(m.sessionTree.FlatItems) > 0 {
@@ -299,7 +400,9 @@ func (m *Model) refreshAgents() {
 	// Update status bar
 	m.statusBar.TotalAgents = len(agents)
 	m.statusBar.RunningAgents = running
-	if agent := m.sessionTree.SelectedAgent(); agent != nil {
+	if m.searchBar.Query != "" {
+		m.statusBar.SelectedAgent = fmt.Sprintf("filter: %q (%d/%d)", m.searchBar.Query, len(filteredAgents), len(agents))
+	} else if agent := m.sessionTree.SelectedAgent(); agent != nil {
 		m.statusBar.SelectedAgent = agent.Name
 	} else {
 		m.statusBar.SelectedAgent = ""

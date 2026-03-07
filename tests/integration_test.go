@@ -3,6 +3,7 @@ package tests
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -19,6 +20,7 @@ import (
 // TestEndToEndAgentLifecycle tests the full agent lifecycle:
 // create config → start agent → send keys → capture output → stop agent.
 func TestEndToEndAgentLifecycle(t *testing.T) {
+	skipIfNoTmux(t)
 	tmpDir := t.TempDir()
 	cfg := testConfig(t, tmpDir)
 
@@ -220,6 +222,7 @@ func TestEndToEndConfigAndAgentDefs(t *testing.T) {
 
 // TestEndToEndPipeline tests running an orchestrated sequence of agents.
 func TestEndToEndPipeline(t *testing.T) {
+	skipIfNoTmux(t)
 	tmpDir := t.TempDir()
 
 	// Global config
@@ -292,4 +295,11 @@ func testConfig(t *testing.T, tmpDir string) *config.Config {
 	os.MkdirAll(cfg.PlansDir(), 0o755)
 
 	return cfg
+}
+
+func skipIfNoTmux(t *testing.T) {
+	t.Helper()
+	if _, err := exec.LookPath("tmux"); err != nil {
+		t.Skip("skipping: tmux not found in PATH")
+	}
 }

@@ -19,6 +19,10 @@ type AgentInfo struct {
 	Memory    uint64
 	Group     string
 
+	// Git context
+	GitBranch string
+	GitRepo   string
+
 	// Codex Integrations
 	CodexProfile    string
 	CodexReasoning  string

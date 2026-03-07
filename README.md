@@ -10,13 +10,24 @@
 - **Real-Time Dashboard** — Monitor all agents with a beautiful bubbletea TUI
 - **Deep Codex & Gemini Integration** — Display active profiles, reasoning efforts, and MCP servers for Codex and Gemini agents natively in the TUI.
 - **Tree-Style Session Navigator** — Collapsible, grouped sidebar with mouse click support
+- **Search & Filter** — Press `/` in the dashboard to filter agents by name, type, group, or status
+- **Agent Quick-Actions** — Press `m` for a popup menu: attach, logs, send, restart, stop
+- **Git-Aware Sessions** — Auto-detect and display git branch per agent in the TUI
 - **Live Output Streaming** — Watch agent output in real-time with `logs --follow`
 - **Inter-Agent Communication** — Send messages between agents via `send`
+- **Smart Pipelines** — Parallel stage execution with failure policies (abort/skip/retry) and timeouts
+- **Agent Health Monitoring** — Restart policies (never/on-failure/always), idle timeout detection
+- **Session Persistence** — `save`/`resume` agent configs across reboots
+- **Agent Templates** — 8 built-in templates (code-reviewer, test-writer, docs-generator, etc.)
+- **Session History** — Track past sessions with filtering and aggregate statistics
+- **Plugin System** — Lifecycle hooks, webhooks, and stdin/stdout protocol for extensions
 - **Workflow Plans** — Create, approve, and reject spec-driven workflow plans
 - **Custom Agent Definitions** — Define agents via Markdown + YAML frontmatter
 - **Project Configs** — Per-project settings with `.agentmux/config.yaml`
+- **Environment Diagnostics** — `doctor` and `cleanup` commands for health checks
 - **DevContainer Support** — Generate devcontainer configs with `init --devcontainer`
 - **Shell Completions** — Full bash/zsh/fish/powershell completions
+- **CI/CD Pipeline** — GitHub Actions for lint, test, cross-compile, and release
 - **Cross-Platform** — WSL and Docker detection with platform-specific adaptations
 
 ## Prerequisites
@@ -65,6 +76,12 @@ agentmux dashboard
 | `agentmux codex` | Show interactive assistance on your Codex configs |
 | `agentmux gemini` | Show interactive assistance on your Gemini configs and MCPs |
 | `agentmux dashboard` | Open the real-time TUI dashboard |
+| `agentmux doctor` | Run environment health check |
+| `agentmux cleanup [--dry-run]` | Remove orphaned sessions and stale state |
+| `agentmux save <name>` | Save agent config for later resuming |
+| `agentmux resume <name>` | Re-launch a saved agent after reboots |
+| `agentmux templates` | List/install built-in agent templates |
+| `agentmux history [--stats]` | View past session history |
 | `agentmux plan create <title>` | Create a workflow plan (use `--agent-driven` if inside an agent) |
 | `agentmux plan list` | List all plans |
 | `agentmux plan approve <id>` | Approve a plan |
@@ -173,10 +190,10 @@ The TUI dashboard provides a real-time view of all running agents, including dee
 │   ● my-gemini        ││                                         │
 │     🔌 MCP: filesystem, github, memo                            │
 └──────────────────────┘└─────────────────────────────────────────┘
- ↑/k up │ ↓/j down │ Enter select │ ←/→ fold │ a attach │ q quit  2/3 agents
+ ↑/k up │ ↓/j down │ Enter select │ ←/→ fold │ / search │ m menu │ q quit  2/3 agents
 ```
 
-**Keyboard shortcuts:** `↑/k` `↓/j` navigate, `Enter` select/toggle, `←/→` collapse/expand, `pgup/pgdn` scroll logs, `d` stop, `q` quit.
+**Keyboard shortcuts:** `↑/k` `↓/j` navigate, `Enter` select/toggle, `←/→` collapse/expand, `/` search/filter, `m` agent actions menu, `d` stop, `q` quit.
 
 **Interactive Sessions:**
 - Press `a` on an agent to instantly embed that tmux session fullscreen inside the dashboard. Press `Ctrl+b` then `d` to detach and return.
@@ -199,6 +216,8 @@ make install    # Install to $GOPATH/bin
 - [CLI Command Guide](docs/commands.md) — Detailed reference for all commands and options
 - [Codex Integration Guide](docs/CODEX.md) — Detailed examples of launching Codex configurations
 - [Gemini Integration Guide](docs/GEMINI.md) — Detailed examples of Gemini MCP configurations
+- [Improvement Plan](docs/IMPROVEMENT_PLAN.md) — Roadmap and technical plan for enhancements
+- [Improvement Status](docs/IMPROVEMENT_STATUS.md) — Implementation progress tracker
 - [Design Overview](docs/DESIGN.md) — Architecture and internal design principles
 - [Development Runbook](docs/RUNBOOK.md) — Guides for common development tasks
 - [Build Walkthrough](docs/WALKTHROUGH.md) — Step-by-step history of the project build
@@ -210,10 +229,15 @@ make install    # Install to $GOPATH/bin
 CLI (cobra)
 ├── Session Manager (internal/session)
 │   ├── tmux Integration Layer (internal/tmux)
-│   ├── Monitor → Logger + Watcher (internal/monitor)
+│   ├── Monitor → Logger + Watcher + Health (internal/monitor)
 │   └── Config / Agent Definitions (internal/config)
+├── Orchestrator (internal/orchestrator) — parallel pipelines
 ├── Workflow Engine (internal/workflow)
 ├── TUI Dashboard (internal/tui) — bubbletea + lipgloss
+├── Plugin System (internal/plugin) — hooks, webhooks, protocol
+├── Templates (internal/templates) — built-in agent templates
+├── History (internal/history) — session tracking
+├── Git Detection (internal/git)
 ├── DevContainer Generator (internal/devcontainer)
 └── Platform Detection (internal/platform)
 ```
