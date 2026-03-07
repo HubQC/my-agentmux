@@ -34,6 +34,7 @@ type AgentSession struct {
 type State struct {
 	mu       sync.RWMutex
 	filePath string
+	fileLock *FileLock
 	Sessions map[string]*AgentSession `json:"sessions"`
 }
 
@@ -41,6 +42,7 @@ type State struct {
 func NewState(filePath string) (*State, error) {
 	s := &State{
 		filePath: filePath,
+		fileLock: NewFileLock(filePath + ".lock"),
 		Sessions: make(map[string]*AgentSession),
 	}
 
@@ -69,6 +71,14 @@ func (s *State) Put(session *AgentSession) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if err := s.fileLock.Lock(5 * time.Second); err != nil {
+		return fmt.Errorf("acquiring state lock: %w", err)
+	}
+	defer s.fileLock.Unlock()
+
+	// Re-load from disk to get any changes from other processes
+	_ = s.loadUnsafe()
+
 	s.Sessions[session.Name] = session
 	return s.save()
 }
@@ -77,6 +87,14 @@ func (s *State) Put(session *AgentSession) error {
 func (s *State) Remove(name string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	if err := s.fileLock.Lock(5 * time.Second); err != nil {
+		return fmt.Errorf("acquiring state lock: %w", err)
+	}
+	defer s.fileLock.Unlock()
+
+	// Re-load from disk
+	_ = s.loadUnsafe()
 
 	delete(s.Sessions, name)
 	return s.save()
@@ -99,14 +117,33 @@ func (s *State) Clear() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if err := s.fileLock.Lock(5 * time.Second); err != nil {
+		return fmt.Errorf("acquiring state lock: %w", err)
+	}
+	defer s.fileLock.Unlock()
+
 	s.Sessions = make(map[string]*AgentSession)
 	return s.save()
 }
 
-// load reads state from disk.
+// load reads state from disk (acquires file lock).
 func (s *State) load() error {
+	if err := s.fileLock.Lock(5 * time.Second); err != nil {
+		return fmt.Errorf("acquiring state lock for load: %w", err)
+	}
+	defer s.fileLock.Unlock()
+
+	return s.loadUnsafe()
+}
+
+// loadUnsafe reads state from disk without acquiring the file lock.
+// Caller must hold the lock.
+func (s *State) loadUnsafe() error {
 	data, err := os.ReadFile(s.filePath)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
 		return err
 	}
 
