@@ -8,7 +8,7 @@
 
 - **Multi-Agent Sessions** — Run Claude Code, Aider, Codex, Gemini CLI, or any CLI agent in isolated tmux sessions
 - **Real-Time Dashboard** — Monitor all agents with a beautiful bubbletea TUI
-- **Deep Codex Integration** — Display active profiles, reasoning efforts, and MCP servers for Codex agents in the TUI.
+- **Deep Codex & Gemini Integration** — Display active profiles, reasoning efforts, and MCP servers for Codex and Gemini agents natively in the TUI.
 - **Tree-Style Session Navigator** — Collapsible, grouped sidebar with mouse click support
 - **Live Output Streaming** — Watch agent output in real-time with `logs --follow`
 - **Inter-Agent Communication** — Send messages between agents via `send`
@@ -63,6 +63,7 @@ agentmux dashboard
 | `agentmux send <name> <msg>` | Send input to an agent |
 | `agentmux agents [--all]` | List available agent types |
 | `agentmux codex` | Show interactive assistance on your Codex configs |
+| `agentmux gemini` | Show interactive assistance on your Gemini configs and MCPs |
 | `agentmux dashboard` | Open the real-time TUI dashboard |
 | `agentmux plan create <title>` | Create a workflow plan (use `--agent-driven` if inside an agent) |
 | `agentmux plan list` | List all plans |
@@ -152,7 +153,7 @@ groups:
 
 ## Dashboard
 
-The TUI dashboard provides a real-time view of all running agents, including deep native integration displaying Codex configurations.
+The TUI dashboard provides a real-time view of all running agents, including deep native integration displaying Codex and Gemini configurations.
 
 ```
 ┌──────────────────────┐┌─────────────────────────────────────────┐
@@ -168,6 +169,9 @@ The TUI dashboard provides a real-time view of all running agents, including dee
 │   ● testing-codex    ││                                         │
 │     ↳ [gpt-5.3-codex] (Reasoning: high) 🤖 Multi-Agent          │
 │       🔌 MCP: filesystem, chrome-devtools, sqlcl                │
+│ ▼ gemini (1)         ││                                         │
+│   ● my-gemini        ││                                         │
+│     🔌 MCP: filesystem, github, memo                            │
 └──────────────────────┘└─────────────────────────────────────────┘
  ↑/k up │ ↓/j down │ Enter select │ ←/→ fold │ a attach │ q quit  2/3 agents
 ```

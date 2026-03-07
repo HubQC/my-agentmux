@@ -7,6 +7,7 @@ import (
 
 	"github.com/cqi/my_agentmux/internal/codex"
 	"github.com/cqi/my_agentmux/internal/config"
+	"github.com/cqi/my_agentmux/internal/gemini"
 	"github.com/cqi/my_agentmux/internal/session"
 )
 
@@ -113,6 +114,12 @@ func (r *Runner) Launch(ctx context.Context, opts LaunchOptions) (*session.Agent
 			// Extract MCP servers
 			for mcpName := range codexCfg.MCPServers {
 				createOpts.CodexMCPs = append(createOpts.CodexMCPs, mcpName)
+			}
+		}
+	} else if agentType == "gemini" {
+		if geminiCfg, err := gemini.LoadConfig(); err == nil && geminiCfg != nil {
+			for mcpName := range geminiCfg.MCPServers {
+				createOpts.GeminiMCPs = append(createOpts.GeminiMCPs, mcpName)
 			}
 		}
 	}

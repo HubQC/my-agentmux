@@ -24,6 +24,9 @@ type AgentInfo struct {
 	CodexReasoning  string
 	CodexMCPs       []string
 	CodexMultiAgent bool
+
+	// Gemini Integrations
+	GeminiMCPs []string
 }
 
 // AgentList renders a sidebar list of agents.

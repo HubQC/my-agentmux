@@ -245,6 +245,9 @@ func (st SessionTree) Render() string {
 	codexStyle := lipgloss.NewStyle().Foreground(codexColor)
 	codexDimStyle := lipgloss.NewStyle().Foreground(codexColor).Faint(true)
 
+	geminiColor := lipgloss.Color("#10B981") // Mint green for Gemini
+	geminiDimStyle := lipgloss.NewStyle().Foreground(geminiColor).Faint(true)
+
 	var b strings.Builder
 
 	// Title
@@ -330,6 +333,17 @@ func (st SessionTree) Render() string {
 					b.WriteString(style.Render(mcpLine))
 					b.WriteString("\n")
 				}
+			}
+
+			// Gemini Integration Display
+			if node.Agent != nil && len(node.Agent.GeminiMCPs) > 0 {
+				mcpStr := strings.Join(node.Agent.GeminiMCPs, ", ")
+				if len(mcpStr) > 50 {
+					mcpStr = mcpStr[:47] + "..."
+				}
+				mcpLine := fmt.Sprintf("    🔌 MCP: %s", geminiDimStyle.Render(mcpStr))
+				b.WriteString(style.Render(mcpLine))
+				b.WriteString("\n")
 			}
 		}
 	}

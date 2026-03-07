@@ -26,6 +26,11 @@ Dive deeply into your Codex configurations natively in `agentmux`. Parses `~/.co
 
 - **Usage**: `agentmux codex`
 
+### `gemini`
+Dive deeply into your Gemini configurations natively in `agentmux`. Parses `~/.gemini/settings.json` to act as an advisor, analyzing available MCP servers and rendering advice on what commands to use.
+
+- **Usage**: `agentmux gemini`
+
 ### `attach`
 Attach the current terminal to a running agent's tmux session.
 
@@ -100,6 +105,6 @@ Stop and remove one or all agent sessions.
   - `-a, --all`: Stop all running agent sessions.
 
 ### `dashboard`
-Open the real-time TUI dashboard to monitor and manage all agents. For `codex` agents, it natively displays active profiles, reasoning effort, and MCP servers.
+Open the real-time TUI dashboard to monitor and manage all agents. For `codex` and `gemini` agents, it natively displays active profiles, reasoning effort, and MCP servers.
 
 - **Usage**: `agentmux dashboard`

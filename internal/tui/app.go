@@ -270,6 +270,8 @@ func (m *Model) refreshAgents() {
 			CodexReasoning:  s.CodexReasoning,
 			CodexMCPs:       s.CodexMCPs,
 			CodexMultiAgent: s.CodexMultiAgent,
+
+			GeminiMCPs: s.GeminiMCPs,
 		}
 		if res, ok := m.agentResources[s.Name]; ok {
 			ag.CPU = res.CPU

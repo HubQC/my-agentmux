@@ -56,6 +56,9 @@ type CreateOptions struct {
 	CodexReasoning  string
 	CodexMCPs       []string
 	CodexMultiAgent bool
+
+	// Gemini Integration
+	GeminiMCPs []string
 }
 
 // Create creates a new agent session.
@@ -122,6 +125,8 @@ func (m *Manager) Create(ctx context.Context, opts CreateOptions) (*AgentSession
 		CodexReasoning:  opts.CodexReasoning,
 		CodexMCPs:       opts.CodexMCPs,
 		CodexMultiAgent: opts.CodexMultiAgent,
+
+		GeminiMCPs: opts.GeminiMCPs,
 	}
 
 	if err := m.state.Put(agentSession); err != nil {

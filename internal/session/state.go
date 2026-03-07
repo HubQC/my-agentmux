@@ -25,6 +25,9 @@ type AgentSession struct {
 	CodexReasoning  string   `json:"codex_reasoning,omitempty"`
 	CodexMCPs       []string `json:"codex_mcps,omitempty"`
 	CodexMultiAgent bool     `json:"codex_multi_agent,omitempty"`
+
+	// Gemini Integrations
+	GeminiMCPs []string `json:"gemini_mcps,omitempty"`
 }
 
 // State manages persistent session state stored as JSON.
