@@ -21,15 +21,37 @@ List all available agent types, including built-in presets and custom agent defi
 - **Flags**:
   - `-a, --all`: Show all presets including uninstalled ones.
 
+### `cleanup`
+Remove orphaned tmux sessions and stale state entries.
+
+- **Usage**: `agentmux cleanup [flags]`
+- **Flags**:
+  - `--dry-run`: Preview what would be cleaned without making changes.
+
 ### `codex`
 Dive deeply into your Codex configurations natively in `agentmux`. Parses `~/.codex/config.toml` (and project overrides) to act as an advisor, analyzing available Codex Profiles / sub-agent roles (like `reasoning: high` or descriptions) and rendering advice on what commands to use.
 
 - **Usage**: `agentmux codex`
 
+### `doctor`
+Run a full environment health check: tmux version, configuration directories, installed agent CLIs, and orphaned session detection.
+
+- **Usage**: `agentmux doctor`
+
 ### `gemini`
 Dive deeply into your Gemini configurations natively in `agentmux`. Parses `~/.gemini/settings.json` to act as an advisor, analyzing available MCP servers and rendering advice on what commands to use.
 
 - **Usage**: `agentmux gemini`
+
+### `history`
+View a log of past agent sessions with duration, status, and type.
+
+- **Usage**: `agentmux history [flags]`
+- **Flags**:
+  - `--limit int`: Max number of entries to show (default: 20).
+  - `--type string`: Filter by agent type.
+  - `--status string`: Filter by status (`completed`, `failed`, `stopped`).
+  - `--stats`: Show aggregate statistics instead of session list.
 
 ### `attach`
 Attach the current terminal to a running agent's tmux session.
@@ -79,6 +101,18 @@ Manage spec-driven workflow plans.
     - `-r, --reason string`: Provide a reason for rejection.
   - `delete <plan-id>`: Remove a plan file.
 
+### `resume`
+Re-launch a previously saved agent session with its saved configuration.
+
+- **Usage**: `agentmux resume <agent-name> [flags]`
+- **Flags**:
+  - `--list`: List all saved sessions.
+
+### `save`
+Save a running agent's configuration for later resuming.
+
+- **Usage**: `agentmux save <agent-name>`
+
 ### `send`
 Send input text/commands to an agent's tmux session.
 
@@ -104,7 +138,21 @@ Stop and remove one or all agent sessions.
 - **Flags**:
   - `-a, --all`: Stop all running agent sessions.
 
+### `templates` (alias: `tmpl`)
+Browse and install curated agent definition templates.
+
+- **Usage**: `agentmux templates [flags]`
+- **Flags**:
+  - `--tag string`: Filter templates by tag (e.g., `quality`, `security`).
+- **Subcommands**:
+  - `install <template-name>`: Install a template as an agent definition file.
+- **Built-in templates**: `code-reviewer`, `test-writer`, `docs-generator`, `refactorer`, `security-auditor`, `performance-optimizer`, `architect`, `debugger`
+
 ### `dashboard`
 Open the real-time TUI dashboard to monitor and manage all agents. For `codex` and `gemini` agents, it natively displays active profiles, reasoning effort, and MCP servers.
 
 - **Usage**: `agentmux dashboard`
+- **TUI Shortcuts**:
+  - `/`: Open search/filter bar (filter by name, type, group, status)
+  - `m`: Open agent quick-actions menu (attach, logs, send, restart, stop)
+  - `⎇`: Git branch displayed per agent when in a git repository
