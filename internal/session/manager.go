@@ -50,6 +50,12 @@ type CreateOptions struct {
 	Args      []string
 	Env       map[string]string
 	Group     string
+
+	// Codex Integration
+	CodexProfile    string
+	CodexReasoning  string
+	CodexMCPs       []string
+	CodexMultiAgent bool
 }
 
 // Create creates a new agent session.
@@ -111,6 +117,11 @@ func (m *Manager) Create(ctx context.Context, opts CreateOptions) (*AgentSession
 		CreatedAt: time.Now(),
 		Status:    "running",
 		Group:     opts.Group,
+
+		CodexProfile:    opts.CodexProfile,
+		CodexReasoning:  opts.CodexReasoning,
+		CodexMCPs:       opts.CodexMCPs,
+		CodexMultiAgent: opts.CodexMultiAgent,
 	}
 
 	if err := m.state.Put(agentSession); err != nil {

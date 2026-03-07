@@ -11,14 +11,20 @@ import (
 
 // AgentSession represents a tracked agent session.
 type AgentSession struct {
-	Name       string    `json:"name"`
-	TmuxName   string    `json:"tmux_name"`
-	AgentType  string    `json:"agent_type"`
-	WorkDir    string    `json:"work_dir"`
-	CreatedAt  time.Time `json:"created_at"`
-	Status     string    `json:"status"` // "running", "stopped", "error"
-	PID        int       `json:"pid,omitempty"`
-	Group      string    `json:"group,omitempty"`
+	Name      string    `json:"name"`
+	TmuxName  string    `json:"tmux_name"`
+	AgentType string    `json:"agent_type"`
+	WorkDir   string    `json:"work_dir"`
+	CreatedAt time.Time `json:"created_at"`
+	Status    string    `json:"status"` // "running", "stopped", "error"
+	PID       int       `json:"pid,omitempty"`
+	Group     string    `json:"group,omitempty"`
+
+	// Codex Integrations
+	CodexProfile    string   `json:"codex_profile,omitempty"`
+	CodexReasoning  string   `json:"codex_reasoning,omitempty"`
+	CodexMCPs       []string `json:"codex_mcps,omitempty"`
+	CodexMultiAgent bool     `json:"codex_multi_agent,omitempty"`
 }
 
 // State manages persistent session state stored as JSON.

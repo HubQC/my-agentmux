@@ -148,7 +148,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if agent := m.sessionTree.SelectedAgent(); agent != nil && agent.Status == "running" {
 				tmuxSession := m.cfg.SessionPrefix + "-" + agent.Name
 				c := exec.Command(m.cfg.TmuxBinary, "attach-session", "-t", tmuxSession)
-				
+
 				// Suspend the TUI, attach to tmux, and resume when detached
 				return m, tea.ExecProcess(c, func(err error) tea.Msg {
 					// When tmux detaches, force a refresh
@@ -210,7 +210,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case resourceMsg:
 		event := monitor.ResourceEvent(msg)
 		m.agentResources[event.AgentName] = event
-		
+
 		// Update agentList immediately for responsive UI
 		for i, fi := range m.sessionTree.FlatItems {
 			if fi.Node.Agent != nil && fi.Node.Agent.Name == event.AgentName {
@@ -265,6 +265,11 @@ func (m *Model) refreshAgents() {
 			WorkDir:   s.WorkDir,
 			CreatedAt: s.CreatedAt,
 			Group:     s.Group,
+
+			CodexProfile:    s.CodexProfile,
+			CodexReasoning:  s.CodexReasoning,
+			CodexMCPs:       s.CodexMCPs,
+			CodexMultiAgent: s.CodexMultiAgent,
 		}
 		if res, ok := m.agentResources[s.Name]; ok {
 			ag.CPU = res.CPU
@@ -327,7 +332,7 @@ func (m *Model) updateLayout() {
 	} else if m.width < 100 {
 		sidebarWidth = 25
 	}
-	
+
 	mainHeight := m.height - 1 // Leave 1 line for status bar
 	if mainHeight < 5 {
 		mainHeight = 5
@@ -338,7 +343,7 @@ func (m *Model) updateLayout() {
 
 	m.logViewer.Width = m.width - sidebarWidth
 	m.logViewer.Height = mainHeight
-	
+
 	m.statusBar.Width = m.width
 }
 

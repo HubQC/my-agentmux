@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cqi/my_agentmux/internal/codex"
 	"github.com/cqi/my_agentmux/internal/config"
 	"github.com/cqi/my_agentmux/internal/session"
 )
@@ -93,6 +94,27 @@ func (r *Runner) Launch(ctx context.Context, opts LaunchOptions) (*session.Agent
 		Command:   command,
 		Env:       opts.Env,
 		Group:     opts.Group,
+	}
+
+	// Try loading Codex configuration to enhance the agent tracking
+	if agentType == "codex" {
+		if codexCfg, err := codex.LoadConfig(); err == nil && codexCfg != nil { // Intentionally ignoring errors as codex might not be installed
+			createOpts.CodexMultiAgent = codexCfg.Features.MultiAgent
+
+			// Extract active profile info
+			if profile, ok := codexCfg.Profiles[codexCfg.Profile]; ok {
+				createOpts.CodexProfile = codexCfg.Profile
+				createOpts.CodexReasoning = profile.ModelReasoningEffort
+				if createOpts.CodexReasoning == "" {
+					createOpts.CodexReasoning = codexCfg.ModelReasoningEffort // Fallback to global
+				}
+			}
+
+			// Extract MCP servers
+			for mcpName := range codexCfg.MCPServers {
+				createOpts.CodexMCPs = append(createOpts.CodexMCPs, mcpName)
+			}
+		}
 	}
 
 	agentSession, err := r.sessionMgr.Create(ctx, createOpts)

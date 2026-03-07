@@ -217,6 +217,7 @@ func (st SessionTree) Render() string {
 	highlight := lipgloss.Color("#312E81")
 	borderColor := lipgloss.Color("#374151")
 	groupColor := lipgloss.Color("#F59E0B")
+	codexColor := lipgloss.Color("#0EA5E9") // Nice bright blue for Codex elements
 
 	titleStyle := lipgloss.NewStyle().
 		Bold(true).
@@ -242,6 +243,9 @@ func (st SessionTree) Render() string {
 	statusRunning := lipgloss.NewStyle().Foreground(green)
 	statusStopped := lipgloss.NewStyle().Foreground(red)
 	uptimeStyle := lipgloss.NewStyle().Foreground(dimText)
+
+	codexStyle := lipgloss.NewStyle().Foreground(codexColor)
+	codexDimStyle := lipgloss.NewStyle().Foreground(codexColor).Faint(true)
 
 	var b strings.Builder
 
@@ -303,6 +307,32 @@ func (st SessionTree) Render() string {
 			}
 			b.WriteString(style.Render(line))
 			b.WriteString("\n")
+
+			// Codex Integration Display
+			if node.Agent != nil && node.Agent.CodexProfile != "" {
+				// Line 1: Profile & Reasoning
+				profileLine := fmt.Sprintf("    ↳ %s", codexStyle.Render("["+node.Agent.CodexProfile+"]"))
+				if node.Agent.CodexReasoning != "" {
+					profileLine += " " + codexDimStyle.Render("(Reasoning: "+node.Agent.CodexReasoning+")")
+				}
+				if node.Agent.CodexMultiAgent {
+					profileLine += " " + codexStyle.Render("🤖 Multi-Agent")
+				}
+				b.WriteString(style.Render(profileLine))
+				b.WriteString("\n")
+
+				// Line 2: MCP Servers
+				if len(node.Agent.CodexMCPs) > 0 {
+					mcpStr := strings.Join(node.Agent.CodexMCPs, ", ")
+					// truncate if too long
+					if len(mcpStr) > 40 {
+						mcpStr = mcpStr[:37] + "..."
+					}
+					mcpLine := fmt.Sprintf("      🔌 MCP: %s", codexDimStyle.Render(mcpStr))
+					b.WriteString(style.Render(mcpLine))
+					b.WriteString("\n")
+				}
+			}
 		}
 	}
 
