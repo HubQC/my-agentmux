@@ -96,12 +96,10 @@ func resolveGroup(agent *AgentInfo, projectGroups map[string][]string) string {
 	}
 
 	// 2. Project config groups
-	if projectGroups != nil {
-		for groupName, members := range projectGroups {
-			for _, name := range members {
-				if name == agent.Name {
-					return groupName
-				}
+	for groupName, members := range projectGroups {
+		for _, name := range members {
+			if name == agent.Name {
+				return groupName
 			}
 		}
 	}

@@ -95,6 +95,6 @@ Stop and remove one or all agent sessions.
   - `-a, --all`: Stop all running agent sessions.
 
 ### `dashboard`
-Open the real-time TUI dashboard to monitor and manage all agents.
+Open the real-time TUI dashboard to monitor and manage all agents. Automatically detects and natively parses `~/.codex/config.toml` for `codex` type agents, visualizing active MCP servers, Profiles, and reasoning efforts inline.
 
 - **Usage**: `agentmux dashboard`
