@@ -306,6 +306,10 @@ func (st SessionTree) Render() string {
 			if uptime != "" {
 				line += " " + uptimeStyle.Render(uptime)
 			}
+			if node.Agent != nil && node.Agent.GitBranch != "" {
+				gitBranchStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#A78BFA")).Italic(true)
+				line += " " + gitBranchStyle.Render("⎇ "+node.Agent.GitBranch)
+			}
 			b.WriteString(style.Render(line))
 			b.WriteString("\n")
 

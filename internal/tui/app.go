@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/cqi/my_agentmux/internal/config"
+	gitutil "github.com/cqi/my_agentmux/internal/git"
 	"github.com/cqi/my_agentmux/internal/monitor"
 	"github.com/cqi/my_agentmux/internal/session"
 	"github.com/cqi/my_agentmux/internal/tmux"
@@ -351,6 +352,15 @@ func (m *Model) refreshAgents() {
 			CodexMultiAgent: s.CodexMultiAgent,
 
 			GeminiMCPs: s.GeminiMCPs,
+		}
+
+		// Populate git info
+		if s.WorkDir != "" {
+			gitInfo := gitutil.Detect(s.WorkDir)
+			if gitInfo.IsRepo {
+				ag.GitBranch = gitutil.BranchLabel(gitInfo.Branch)
+				ag.GitRepo = gitInfo.RepoName
+			}
 		}
 		if res, ok := m.agentResources[s.Name]; ok {
 			ag.CPU = res.CPU
