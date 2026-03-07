@@ -19,7 +19,7 @@ CLI (cobra)
 
 ## Cross-Session Coordination
 
-`STATUS.md` in the project root is updated at the end of every step. New sessions read it first.
+`docs/STATUS.md` is updated at the end of every step. New sessions read it first.
 
 ---
 
@@ -33,7 +33,7 @@ CLI (cobra)
 - `cmd/root.go` — root cobra command with config loading
 - `cmd/version.go` — version subcommand with build info
 - `internal/config/config.go` — YAML config loader with defaults
-- `STATUS.md` — cross-session status tracker
+- `docs/STATUS.md` — cross-session status tracker
 
 **Verify:** `go build -o agentmux . && ./agentmux --version && go test ./...`
 

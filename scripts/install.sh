@@ -71,7 +71,39 @@ else
     sudo mv "$TMPDIR/$BINARY" "$INSTALL_DIR/$BINARY"
 fi
 
+setup_path() {
+    local dir="$1"
+    if [[ ":$PATH:" != *":$dir:"* ]]; then
+        echo "  Adding $dir to PATH..."
+        local shell_profile=""
+        
+        # Detect shell and profile
+        case "$SHELL" in
+            */zsh) shell_profile="$HOME/.zshrc" ;;
+            */bash) 
+                if [[ "$OSTYPE" == "darwin"* ]]; then
+                    shell_profile="$HOME/.bash_profile"
+                else
+                    shell_profile="$HOME/.bashrc"
+                fi
+                ;;
+            *) shell_profile="$HOME/.profile" ;;
+        esac
+
+        if [ -n "$shell_profile" ]; then
+            if ! grep -q "export PATH=.*$dir" "$shell_profile" 2>/dev/null; then
+                echo "" >> "$shell_profile"
+                echo "# AgentMux PATH" >> "$shell_profile"
+                echo "export PATH=\"\$PATH:$dir\"" >> "$shell_profile"
+                echo "  ✓ Added to $shell_profile"
+                echo "  ⚠ Please run 'source $shell_profile' or restart your terminal."
+            fi
+        fi
+    fi
+}
+
 chmod +x "$INSTALL_DIR/$BINARY"
+setup_path "$INSTALL_DIR"
 
 echo ""
 echo "✓ Installed $BINARY to $INSTALL_DIR/$BINARY"
