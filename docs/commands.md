@@ -15,7 +15,7 @@ These flags can be used with any command:
 ## Commands
 
 ### `agents`
-List all available agent types, including built-in presets and custom agent definitions.
+List all available agent types, including built-in presets and custom agent definitions. Extra context is dynamically appended if `~/.codex/config.toml` is found, exposing available Codex Profiles (e.g. `gpt-5.3-codex`) and sub-agent task definitions (e.g. `supervisor`, `task_planner`).
 
 - **Usage**: `agentmux agents [flags]`
 - **Flags**:

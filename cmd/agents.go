@@ -7,6 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/cqi/my_agentmux/internal/agent"
+	"github.com/cqi/my_agentmux/internal/codex"
 	"github.com/cqi/my_agentmux/internal/config"
 	"github.com/spf13/cobra"
 )
@@ -50,29 +51,100 @@ in ~/.agentmux/agents/ (or the configured agents directory).`,
 
 		// Custom agent definitions
 		defs, err := config.LoadAgentDefinitions(cfg.AgentsDir())
-		if err != nil {
-			// Non-fatal — just print presets
-			w.Flush()
-			return nil
-		}
+		if err == nil {
+			sort.Slice(defs, func(i, j int) bool {
+				return defs[i].Name < defs[j].Name
+			})
 
-		sort.Slice(defs, func(i, j int) bool {
-			return defs[i].Name < defs[j].Name
-		})
-
-		for _, d := range defs {
-			desc := d.Description
-			if desc == "" {
-				desc = fmt.Sprintf("Custom (%s)", d.AgentType)
+			for _, d := range defs {
+				desc := d.Description
+				if desc == "" {
+					desc = fmt.Sprintf("Custom (%s)", d.AgentType)
+				}
+				// Truncate long descriptions
+				if len(desc) > 50 {
+					desc = desc[:47] + "..."
+				}
+				fmt.Fprintf(w, "%s\tcustom\t● defined\t%s\n", d.Name, desc)
 			}
-			// Truncate long descriptions
-			if len(desc) > 50 {
-				desc = desc[:47] + "..."
-			}
-			fmt.Fprintf(w, "%s\tcustom\t● defined\t%s\n", d.Name, desc)
 		}
 
 		w.Flush()
+
+		// Codex specific configurations
+		codexCfg, err := codex.LoadConfig()
+		if err == nil && codexCfg != nil {
+			// Print Codex Profiles
+			hasProfiles := len(codexCfg.Profiles) > 0
+			if hasProfiles {
+				fmt.Fprintln(w, "\nCODEX PROFILES\tMODEL/PROVIDER\tREASONING\tDESCRIPTION")
+				fmt.Fprintln(w, "--------------\t--------------\t---------\t-----------")
+
+				// Get sorted profile keys for consistent output
+				var profileKeys []string
+				for key := range codexCfg.Profiles {
+					profileKeys = append(profileKeys, key)
+				}
+				sort.Strings(profileKeys)
+
+				for _, key := range profileKeys {
+					profile := codexCfg.Profiles[key]
+					provider := profile.ModelProvider
+					if profile.Model != "" {
+						provider = fmt.Sprintf("%s (%s)", profile.Model, profile.ModelProvider)
+					}
+					reasoning := profile.ModelReasoningEffort
+					if reasoning == "" {
+						reasoning = "-"
+					}
+
+					// Basic description string parsing
+					desc := fmt.Sprintf("Codex configuration profile for %s", key)
+					if profile.Personality != "" {
+						desc += " [Custom Personality]"
+					}
+
+					if profile.ReviewModel != "" {
+						desc += fmt.Sprintf(" (Reviewer: %s)", profile.ReviewModel)
+					}
+
+					if len(desc) > 50 {
+						desc = desc[:47] + "..."
+					}
+					fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", key, provider, reasoning, desc)
+				}
+				w.Flush()
+			}
+
+			// Print Codex Agents (Task Planner, Supervisor, etc)
+			hasAgents := len(codexCfg.Agents) > 0
+			if hasAgents {
+				fmt.Fprintln(w, "\nCODEX AGENTS\tCONFIG FILE\tDESCRIPTION")
+				fmt.Fprintln(w, "------------\t-----------\t-----------")
+
+				var agentKeys []string
+				for key := range codexCfg.Agents {
+					agentKeys = append(agentKeys, key)
+				}
+				sort.Strings(agentKeys)
+
+				for _, key := range agentKeys {
+					a := codexCfg.Agents[key]
+
+					desc := a.Description
+					if desc == "" {
+						desc = fmt.Sprintf("Codex multi-agent role: %s", key)
+					}
+
+					if len(desc) > 50 {
+						desc = desc[:47] + "..."
+					}
+					fmt.Fprintf(w, "%s\t%s\t%s\n", key, a.ConfigFile, desc)
+				}
+				w.Flush()
+			}
+		}
+
 		return nil
 	},
 }

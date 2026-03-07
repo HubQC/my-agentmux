@@ -42,17 +42,28 @@ type Config struct {
 	} `toml:"features"`
 	Profiles   map[string]ProfileConfig `toml:"profiles"`
 	MCPServers map[string]MCPConfig     `toml:"mcp_servers"`
-	Agents     map[string]AgentConfig   `toml:"agents"`
+	AgentsRaw  map[string]any           `toml:"agents"`
+	Agents     map[string]AgentConfig   `toml:"-"`
 }
 
-// LoadConfig reads and parses the ~/.codex/config.toml file
+// LoadConfig reads and parses the codex config.toml.
+// It checks the local `.codex/config.toml` first, then falls back to `~/.codex/config.toml`.
 func LoadConfig() (*Config, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("getting home directory: %w", err)
+	var configPath string
+
+	// 1. Check for project-level local config
+	localConfigPath := filepath.Join(".", ".codex", "config.toml")
+	if _, err := os.Stat(localConfigPath); err == nil {
+		configPath = localConfigPath
+	} else {
+		// 2. Fallback to global config
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("getting home directory: %w", err)
+		}
+		configPath = filepath.Join(homeDir, ".codex", "config.toml")
 	}
 
-	configPath := filepath.Join(homeDir, ".codex", "config.toml")
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -64,6 +75,20 @@ func LoadConfig() (*Config, error) {
 	var cfg Config
 	if err := toml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("parsing codex config: %w", err)
+	}
+
+	cfg.Agents = make(map[string]AgentConfig)
+	for k, v := range cfg.AgentsRaw {
+		if vm, ok := v.(map[string]any); ok {
+			var ac AgentConfig
+			if desc, ok := vm["description"].(string); ok {
+				ac.Description = desc
+			}
+			if cf, ok := vm["config_file"].(string); ok {
+				ac.ConfigFile = cf
+			}
+			cfg.Agents[k] = ac
+		}
 	}
 
 	return &cfg, nil
