@@ -8,6 +8,7 @@
 
 - **Multi-Agent Sessions** — Run Claude Code, Aider, Codex, Gemini CLI, or any CLI agent in isolated tmux sessions
 - **Real-Time Dashboard** — Monitor all agents with a beautiful bubbletea TUI
+- **Deep Codex & Gemini Integration** — Display active profiles, reasoning efforts, and MCP servers for Codex and Gemini agents natively in the TUI.
 - **Tree-Style Session Navigator** — Collapsible, grouped sidebar with mouse click support
 - **Live Output Streaming** — Watch agent output in real-time with `logs --follow`
 - **Inter-Agent Communication** — Send messages between agents via `send`
@@ -61,6 +62,8 @@ agentmux dashboard
 | `agentmux logs <name> [-f]` | View agent output (with follow mode) |
 | `agentmux send <name> <msg>` | Send input to an agent |
 | `agentmux agents [--all]` | List available agent types |
+| `agentmux codex` | Show interactive assistance on your Codex configs |
+| `agentmux gemini` | Show interactive assistance on your Gemini configs and MCPs |
 | `agentmux dashboard` | Open the real-time TUI dashboard |
 | `agentmux plan create <title>` | Create a workflow plan (use `--agent-driven` if inside an agent) |
 | `agentmux plan list` | List all plans |
@@ -150,7 +153,7 @@ groups:
 
 ## Dashboard
 
-The TUI dashboard provides a real-time view of all running agents:
+The TUI dashboard provides a real-time view of all running agents, including deep native integration displaying Codex and Gemini configurations.
 
 ```
 ┌──────────────────────┐┌─────────────────────────────────────────┐
@@ -162,7 +165,13 @@ The TUI dashboard provides a real-time view of all running agents:
 │   ● reviewer         ││ Running tests...                        │
 │     [2.1% CPU | 30MB]││ All 12 tests pass ✓                     │
 │ ▸ /tmp (1)           ││                                         │
-│                      ││                                         │
+│ ▼ codex (1)          ││                                         │
+│   ● testing-codex    ││                                         │
+│     ↳ [gpt-5.3-codex] (Reasoning: high) 🤖 Multi-Agent          │
+│       🔌 MCP: filesystem, chrome-devtools, sqlcl                │
+│ ▼ gemini (1)         ││                                         │
+│   ● my-gemini        ││                                         │
+│     🔌 MCP: filesystem, github, memo                            │
 └──────────────────────┘└─────────────────────────────────────────┘
  ↑/k up │ ↓/j down │ Enter select │ ←/→ fold │ a attach │ q quit  2/3 agents
 ```
@@ -188,6 +197,8 @@ make install    # Install to $GOPATH/bin
 ## Documentation
 
 - [CLI Command Guide](docs/commands.md) — Detailed reference for all commands and options
+- [Codex Integration Guide](docs/CODEX.md) — Detailed examples of launching Codex configurations
+- [Gemini Integration Guide](docs/GEMINI.md) — Detailed examples of Gemini MCP configurations
 - [Design Overview](docs/DESIGN.md) — Architecture and internal design principles
 - [Development Runbook](docs/RUNBOOK.md) — Guides for common development tasks
 - [Build Walkthrough](docs/WALKTHROUGH.md) — Step-by-step history of the project build

@@ -18,6 +18,15 @@ type AgentInfo struct {
 	CPU       float64
 	Memory    uint64
 	Group     string
+
+	// Codex Integrations
+	CodexProfile    string
+	CodexReasoning  string
+	CodexMCPs       []string
+	CodexMultiAgent bool
+
+	// Gemini Integrations
+	GeminiMCPs []string
 }
 
 // AgentList renders a sidebar list of agents.

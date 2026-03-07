@@ -15,11 +15,21 @@ These flags can be used with any command:
 ## Commands
 
 ### `agents`
-List all available agent types, including built-in presets and custom agent definitions.
+List all available agent types, including built-in presets and custom agent definitions. Also lists Codex profiles and sub-agents from `~/.codex/config.toml` if found.
 
 - **Usage**: `agentmux agents [flags]`
 - **Flags**:
   - `-a, --all`: Show all presets including uninstalled ones.
+
+### `codex`
+Dive deeply into your Codex configurations natively in `agentmux`. Parses `~/.codex/config.toml` (and project overrides) to act as an advisor, analyzing available Codex Profiles / sub-agent roles (like `reasoning: high` or descriptions) and rendering advice on what commands to use.
+
+- **Usage**: `agentmux codex`
+
+### `gemini`
+Dive deeply into your Gemini configurations natively in `agentmux`. Parses `~/.gemini/settings.json` to act as an advisor, analyzing available MCP servers and rendering advice on what commands to use.
+
+- **Usage**: `agentmux gemini`
 
 ### `attach`
 Attach the current terminal to a running agent's tmux session.
@@ -95,6 +105,6 @@ Stop and remove one or all agent sessions.
   - `-a, --all`: Stop all running agent sessions.
 
 ### `dashboard`
-Open the real-time TUI dashboard to monitor and manage all agents.
+Open the real-time TUI dashboard to monitor and manage all agents. For `codex` and `gemini` agents, it natively displays active profiles, reasoning effort, and MCP servers.
 
 - **Usage**: `agentmux dashboard`
