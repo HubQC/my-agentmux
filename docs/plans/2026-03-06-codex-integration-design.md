@@ -38,6 +38,19 @@ The dashboard is the main visual interface where the user wants to see the conte
   - **Mode**: `[Multi-Agent]` (if `task_planner` or `supervisor` configs are active)
   - **Tools**: List active MCP servers (e.g., `🔌 MCP: filesystem, chrome-devtools, sqlcl`)
 
+---
+
+### Codex Agents Listing
+Users need to know which Codex profiles and sub-agents are available before launching sessions.
+
+#### [MODIFY] `internal/codex/config.go`
+- Support project-level Codex configs by first checking if `./.codex/config.toml` exists in the current working directory.
+- Fallback to the root global `~/.codex/config.toml`.
+
+#### [MODIFY] `cmd/agents.go`
+- Call `codex.LoadConfig()`.
+- Append a printed list of **Codex Profiles** and **Codex Sub-Agents** (with their descriptions) natively to the `agentmux agents` command output.
+
 ## Verification Plan
 
 ### Automated Tests
