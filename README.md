@@ -198,6 +198,7 @@ make install    # Install to $GOPATH/bin
 
 - [CLI Command Guide](docs/commands.md) — Detailed reference for all commands and options
 - [Codex Integration Guide](docs/CODEX.md) — Detailed examples of launching Codex configurations
+- [Gemini Integration Guide](docs/GEMINI.md) — Detailed examples of Gemini MCP configurations
 - [Design Overview](docs/DESIGN.md) — Architecture and internal design principles
 - [Development Runbook](docs/RUNBOOK.md) — Guides for common development tasks
 - [Build Walkthrough](docs/WALKTHROUGH.md) — Step-by-step history of the project build
