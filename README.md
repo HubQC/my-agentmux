@@ -185,6 +185,14 @@ make clean      # Clean build artifacts
 make install    # Install to $GOPATH/bin
 ```
 
+## Documentation
+
+- [CLI Command Guide](docs/commands.md) — Detailed reference for all commands and options
+- [Design Overview](docs/DESIGN.md) — Architecture and internal design principles
+- [Development Runbook](docs/RUNBOOK.md) — Guides for common development tasks
+- [Build Walkthrough](docs/WALKTHROUGH.md) — Step-by-step history of the project build
+- [Project Status](docs/STATUS.md) — Current state and roadmap
+
 ## Architecture
 
 ```
