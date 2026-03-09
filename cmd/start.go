@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cqi/my_agentmux/internal/agent"
 	"github.com/cqi/my_agentmux/internal/config"
 	"github.com/cqi/my_agentmux/internal/session"
+	"github.com/cqi/my_agentmux/internal/wizard"
 	"github.com/spf13/cobra"
 )
 
@@ -23,9 +25,12 @@ arbitrary command, or --args to pass extra arguments to the agent CLI.
 
 If a custom agent definition exists with the given name (in
 ~/.agentmux/agents/), its settings are used as defaults.`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		agentName := args[0]
+		agentName := ""
+		if len(args) > 0 {
+			agentName = args[0]
+		}
 
 		workDir, _ := cmd.Flags().GetString("workdir")
 		agentType, _ := cmd.Flags().GetString("agent-type")
@@ -58,6 +63,25 @@ If a custom agent definition exists with the given name (in
 			}
 			if len(extraArgs) == 0 && len(agentDef.Args) > 0 {
 				extraArgs = agentDef.Args
+			}
+		}
+
+		// When no agent name is provided, trigger the interactive wizard
+		if agentName == "" {
+			presets := append([]string{"custom", "shell"}, strings.Split(agent.AvailablePresets(), ", ")...)
+
+			wizRes, err := wizard.RunStartWizard(activeCfg, presets)
+			if err != nil {
+				return err
+			}
+
+			agentName = wizRes.Name
+
+			if !cmd.Flags().Changed("agent-type") {
+				agentType = wizRes.AgentType
+			}
+			if !cmd.Flags().Changed("workdir") {
+				workDir = wizRes.WorkDir
 			}
 		}
 

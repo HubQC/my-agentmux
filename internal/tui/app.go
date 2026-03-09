@@ -51,8 +51,11 @@ type Model struct {
 	// Resources per agent name.
 	agentResources map[string]monitor.ResourceEvent
 
-	// Project groups for tree grouping.
+	// Project groups and pipelines
 	projectGroups map[string][]string
+	pipelines     map[string][]string
+
+	pipelineGraph components.PipelineGraph
 
 	// Split mode
 	splitMode   bool
@@ -75,8 +78,10 @@ func NewModel(cfg *config.Config, sessionMgr *session.Manager, tmuxClient *tmux.
 	watcher := monitor.NewWatcher(tmuxClient, logger, cfg.Monitor.PollIntervalMs)
 
 	var pGroups map[string][]string
+	var pipelines map[string][]string
 	if projectGroups != nil {
 		pGroups = projectGroups.Groups
+		pipelines = projectGroups.Pipelines
 	}
 
 	return Model{
@@ -94,6 +99,8 @@ func NewModel(cfg *config.Config, sessionMgr *session.Manager, tmuxClient *tmux.
 		splitMode:      splitMode,
 		rightPaneID:    rightPaneID,
 		projectGroups:  pGroups,
+		pipelines:      pipelines,
+		pipelineGraph:  components.NewPipelineGraph(),
 	}
 }
 
@@ -381,11 +388,35 @@ func (m Model) View() string {
 				Padding(1, 2).
 				Render(m.createForm.View())
 			logPanel = lipgloss.Place(m.width-m.sessionTree.Width, m.height-1, lipgloss.Center, lipgloss.Center, formView)
-		} else if m.actionMenu.Active {
-			logPanel = m.actionMenu.Render()
 		} else {
-			logPanel = "" // or render empty log Viewer if no agent selected
+			// If a pipeline group is selected, visualize it instead of logs
+			selectedNode := m.sessionTree.SelectedNode()
+			if selectedNode != nil && selectedNode.IsGroup && m.pipelines != nil {
+				if seq, ok := m.pipelines[selectedNode.Label]; ok {
+					m.pipelineGraph.Name = selectedNode.Label
+					m.pipelineGraph.Sequence = seq
+					m.pipelineGraph.Agents = make(map[string]*components.AgentInfo)
+					for i := range m.allAgents {
+						ag := &m.allAgents[i]
+						m.pipelineGraph.Agents[ag.Name] = ag
+						// also support matching by type if needed
+						if _, exists := m.pipelineGraph.Agents[ag.Type]; !exists {
+							m.pipelineGraph.Agents[ag.Type] = ag
+						}
+					}
+					logPanel = m.pipelineGraph.Render()
+				}
+			}
 		}
+
+		if logPanel == "" {
+			if m.actionMenu.Active {
+				logPanel = m.actionMenu.Render()
+			} else {
+				logPanel = "" // or render empty log Viewer if no agent selected
+			}
+		}
+
 		mainArea := lipgloss.JoinHorizontal(lipgloss.Top, sidebar, logPanel)
 		rendered = lipgloss.JoinVertical(lipgloss.Left, mainArea, m.statusBar.Render())
 	}
