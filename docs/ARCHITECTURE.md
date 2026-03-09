@@ -16,9 +16,11 @@ CLI (cobra)
 │   ├── tmux Integration Layer (internal/tmux)
 │   ├── Monitor → Logger + Watcher + Health (internal/monitor)
 │   └── Config / Agent Definitions (internal/config)
+├── Interactive CLI Wizard (internal/wizard) — huh forms
 ├── Orchestrator (internal/orchestrator) — parallel pipelines
 ├── Workflow Engine (internal/workflow)
 ├── TUI Dashboard (internal/tui) — bubbletea + lipgloss
+│   └── Components (internal/tui/components) — DAG, tree, split panes
 ├── Plugin System (internal/plugin) — hooks, webhooks, protocol
 ├── Templates (internal/templates) — built-in agent templates
 ├── History (internal/history) — session tracking
