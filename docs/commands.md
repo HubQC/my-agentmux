@@ -121,9 +121,9 @@ Send input text/commands to an agent's tmux session.
   - `--no-enter`: Send the message without pressing Enter.
 
 ### `start`
-Create and start a new agent session in an isolated tmux session.
+Create and start a new agent session in an isolated tmux session. If run without an agent name, an interactive CLI wizard is launched to prompt for configuration.
 
-- **Usage**: `agentmux start <agent-name> [flags]`
+- **Usage**: `agentmux start [agent-name] [flags]`
 - **Flags**:
   - `-t, --agent-type string`: Pick an agent type preset (e.g., `claude`, `aider`).
   - `-a, --args strings`: Pass extra arguments directly to the agent CLI.
@@ -149,10 +149,12 @@ Browse and install curated agent definition templates.
 - **Built-in templates**: `code-reviewer`, `test-writer`, `docs-generator`, `refactorer`, `security-auditor`, `performance-optimizer`, `architect`, `debugger`
 
 ### `dashboard`
-Open the real-time TUI dashboard to monitor and manage all agents. For `codex` and `gemini` agents, it natively displays active profiles, reasoning effort, and MCP servers.
+Open the real-time TUI dashboard to monitor and manage all agents. For `codex` and `gemini` agents, it natively displays active profiles, reasoning effort, and MCP servers. The dashboard also features an interactive pipeline DAG visualization when pipeline groups are selected.
 
 - **Usage**: `agentmux dashboard`
 - **TUI Shortcuts**:
   - `/`: Open search/filter bar (filter by name, type, group, status)
   - `m`: Open agent quick-actions menu (attach, logs, send, restart, stop)
+  - `n`: Open inline interactive modal to create and start a new agent
+  - `l`: Toggle high-performance side-by-side active log streaming
   - `⎇`: Git branch displayed per agent when in a git repository

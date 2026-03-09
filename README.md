@@ -11,11 +11,12 @@
 - **Deep Codex & Gemini Integration** — Display active profiles, reasoning efforts, and MCP servers for Codex and Gemini agents natively in the TUI.
 - **Tree-Style Session Navigator** — Collapsible, grouped sidebar with mouse click support
 - **Search & Filter** — Press `/` in the dashboard to filter agents by name, type, group, or status
-- **Agent Quick-Actions** — Press `m` for a popup menu: attach, logs, send, restart, stop
+- **Interactive CLI Wizard** — Run `agentmux start` to launch an interactive TUI form for agent creation
+- **Dashboard Quick-Actions** — Press `m` for a popup menu: attach, logs, send, restart, stop. Press `n` for inline agent creation. Press `l` for side-by-side log previews.
 - **Git-Aware Sessions** — Auto-detect and display git branch per agent in the TUI
 - **Live Output Streaming** — Watch agent output in real-time with `logs --follow`
 - **Inter-Agent Communication** — Send messages between agents via `send`
-- **Smart Pipelines** — Parallel stage execution with failure policies (abort/skip/retry) and timeouts
+- **Smart Pipelines & Visualization** — Parallel stage execution with visual DAG rendering natively in the dashboard
 - **Agent Health Monitoring** — Restart policies (never/on-failure/always), idle timeout detection
 - **Session Persistence** — `save`/`resume` agent configs across reboots
 - **Agent Templates** — 8 built-in templates (code-reviewer, test-writer, docs-generator, etc.)
@@ -50,7 +51,10 @@ make build
 # Initialize
 agentmux init
 
-# Start an agent
+# Start an agent interactively using the CLI wizard
+agentmux start
+
+# Or start directly with flags
 agentmux start my-coder --agent-type claude -w /path/to/project
 
 # Open the dashboard
@@ -193,12 +197,12 @@ The TUI dashboard provides a real-time view of all running agents, including dee
  ↑/k up │ ↓/j down │ Enter select │ ←/→ fold │ / search │ m menu │ q quit  2/3 agents
 ```
 
-**Keyboard shortcuts:** `↑/k` `↓/j` navigate, `Enter` select/toggle, `←/→` collapse/expand, `/` search/filter, `m` agent actions menu, `d` stop, `q` quit.
+**Keyboard shortcuts:** `↑/k` `↓/j` navigate, `Enter` select/toggle, `←/→` collapse/expand, `/` search/filter, `m` agent actions menu, `n` new agent modal, `l` toggle inline logs, `d` stop, `q` quit.
 
 **Interactive Sessions:**
 - Press `a` on an agent to instantly embed that tmux session fullscreen inside the dashboard. Press `Ctrl+b` then `d` to detach and return.
 - Run `agentmux dashboard --split` to launch a Vim-style side-by-side split. The dashboard runs on the left, and pressing `Enter` on a session instantly switches the right terminal pane to that interactive agent.
-
+- Select a Pipeline group in the tree to automatically visualize its steps in a DAG graph.
 **Mouse:** Click on sessions to select, click on groups to collapse/expand.
 
 ## Development
