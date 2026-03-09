@@ -32,3 +32,6 @@ Thumbs.db
 # Temporary
 *.tmp
 *.log
+
+# Local Git Worktrees
+.worktrees/

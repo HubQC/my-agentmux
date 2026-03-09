@@ -216,12 +216,10 @@ make install    # Install to $GOPATH/bin
 - [CLI Command Guide](docs/commands.md) — Detailed reference for all commands and options
 - [Codex Integration Guide](docs/CODEX.md) — Detailed examples of launching Codex configurations
 - [Gemini Integration Guide](docs/GEMINI.md) — Detailed examples of Gemini MCP configurations
-- [Improvement Plan](docs/IMPROVEMENT_PLAN.md) — Roadmap and technical plan for enhancements
-- [Improvement Status](docs/IMPROVEMENT_STATUS.md) — Implementation progress tracker
-- [Design Overview](docs/DESIGN.md) — Architecture and internal design principles
+- [Architecture Overview](docs/ARCHITECTURE.md) — Core architecture and internal design principles
+- [Project Roadmap](docs/ROADMAP.md) — V2 implementation plan and improvement tracker
+- [Project History](docs/HISTORY.md) — Build walkthrough and step-by-step development log
 - [Development Runbook](docs/RUNBOOK.md) — Guides for common development tasks
-- [Build Walkthrough](docs/WALKTHROUGH.md) — Step-by-step history of the project build
-- [Project Status](docs/STATUS.md) — Current state and roadmap
 
 ## Architecture
 
