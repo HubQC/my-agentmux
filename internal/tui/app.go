@@ -8,13 +8,16 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/cqi/my_agentmux/internal/agent"
 	"github.com/cqi/my_agentmux/internal/config"
 	gitutil "github.com/cqi/my_agentmux/internal/git"
 	"github.com/cqi/my_agentmux/internal/monitor"
 	"github.com/cqi/my_agentmux/internal/session"
 	"github.com/cqi/my_agentmux/internal/tmux"
 	"github.com/cqi/my_agentmux/internal/tui/components"
+	"github.com/cqi/my_agentmux/internal/wizard"
 )
 
 // tickMsg triggers periodic refresh.
@@ -59,6 +62,11 @@ type Model struct {
 	height int
 
 	quitting bool
+
+	showLogs      bool
+	creatingAgent bool
+	createForm    *huh.Form
+	createData    *wizard.StartResult
 }
 
 // NewModel creates the dashboard model.
@@ -100,6 +108,33 @@ func (m Model) Init() tea.Cmd {
 
 // Update handles messages.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.creatingAgent {
+		form, cmd := m.createForm.Update(msg)
+		if f, ok := form.(*huh.Form); ok {
+			m.createForm = f
+		}
+
+		if m.createForm.State == huh.StateCompleted {
+			m.creatingAgent = false
+			go func() {
+				runner := agent.NewRunner(m.cfg, m.sessionMgr)
+				runner.Launch(context.Background(), agent.LaunchOptions{
+					Name:      m.createData.Name,
+					AgentType: m.createData.AgentType,
+					WorkDir:   m.createData.WorkDir,
+				})
+			}()
+			m.refreshAgents()
+		} else if m.createForm.State == huh.StateAborted {
+			m.creatingAgent = false
+		}
+
+		// If it's not a WindowSizeMsg, we exclusively route to the form
+		if _, ok := msg.(tea.WindowSizeMsg); !ok {
+			return m, cmd
+		}
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		key := msg.String()
@@ -204,6 +239,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.watcher.Unwatch(agent.Name)
 				return m, tickCmd()
 			}
+			return m, nil
+
+		case "n":
+			if !m.creatingAgent {
+				m.creatingAgent = true
+				m.createData = &wizard.StartResult{}
+				presets := append([]string{"custom", "shell"}, strings.Split(agent.AvailablePresets(), ", ")...)
+				m.createForm = wizard.NewStartForm(m.createData, presets)
+				m.createForm.Init()
+			}
+			return m, nil
+
+		case "l":
+			m.showLogs = !m.showLogs
+			m.updateLayout()
 			return m, nil
 		}
 
@@ -316,13 +366,25 @@ func (m Model) View() string {
 	var rendered string
 	if m.splitMode {
 		rendered = lipgloss.JoinVertical(lipgloss.Left, sidebar, m.statusBar.Render())
+	} else if m.showLogs {
+		logPanel := m.logViewer.Render()
+		mainArea := lipgloss.JoinHorizontal(lipgloss.Top, sidebar, logPanel)
+		rendered = lipgloss.JoinVertical(lipgloss.Left, mainArea, m.statusBar.Render())
 	} else {
 		// If action menu is active, overlay it on the log panel
 		var logPanel string
-		if m.actionMenu.Active {
+		if m.creatingAgent && m.createForm != nil {
+			// Center the form
+			formView := lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("62")).
+				Padding(1, 2).
+				Render(m.createForm.View())
+			logPanel = lipgloss.Place(m.width-m.sessionTree.Width, m.height-1, lipgloss.Center, lipgloss.Center, formView)
+		} else if m.actionMenu.Active {
 			logPanel = m.actionMenu.Render()
 		} else {
-			logPanel = m.logViewer.Render()
+			logPanel = "" // or render empty log Viewer if no agent selected
 		}
 		mainArea := lipgloss.JoinHorizontal(lipgloss.Top, sidebar, logPanel)
 		rendered = lipgloss.JoinVertical(lipgloss.Left, mainArea, m.statusBar.Render())
