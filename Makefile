@@ -14,6 +14,14 @@ BINARY := agentmux
 build:
 	go build -ldflags "$(LDFLAGS)" -o $(BINARY) .
 
+## desktop: Build the desktop app (requires npm and Wails tags)
+desktop: frontend-build
+	CGO_ENABLED=1 CGO_LDFLAGS="-framework UniformTypeIdentifiers" go build -tags desktop,production -ldflags "$(LDFLAGS)" -o $(BINARY) .
+
+## frontend-build: Build the Svelte frontend
+frontend-build:
+	cd frontend && npm run build
+
 ## test: Run all tests
 test:
 	go test ./... -v -count=1

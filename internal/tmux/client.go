@@ -307,7 +307,7 @@ func (c *Client) SendKeys(ctx context.Context, target string, keys string, press
 // CapturePane captures the visible content of a pane.
 // If start/end are both 0, captures the visible area only.
 func (c *Client) CapturePane(ctx context.Context, target string, start, end int) (string, error) {
-	args := []string{"capture-pane", "-t", target, "-p"}
+	args := []string{"capture-pane", "-t", target, "-p", "-e"}
 
 	if start != 0 || end != 0 {
 		args = append(args, "-S", fmt.Sprintf("%d", start), "-E", fmt.Sprintf("%d", end))

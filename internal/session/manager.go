@@ -41,6 +41,11 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 	}, nil
 }
 
+// TmuxClient returns the internal tmux client.
+func (m *Manager) TmuxClient() *tmux.Client {
+	return m.tmux
+}
+
 // CreateOptions configures a new agent session.
 type CreateOptions struct {
 	Name      string
