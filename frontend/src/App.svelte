@@ -2,9 +2,12 @@
   import { onMount, onDestroy } from 'svelte';
   import SessionTree from './lib/SessionTree.svelte';
   import Terminal from './lib/Terminal.svelte';
+  import SessionGrid from './lib/SessionGrid.svelte';
   import { sessions, startPolling, stopPolling, loading } from './stores/sessions';
+  import { pinnedSessions } from './stores/pinned';
 
   let selectedSession = null;
+  let viewMode = 'focused'; // 'focused' or 'grid'
 
   onMount(() => {
     // Wait for Wails to be ready before starting polling
@@ -22,6 +25,14 @@
 
   function handleSelect(event) {
     selectedSession = event.detail;
+    if (viewMode === 'grid') {
+      // In grid mode, we don't automatically switch back to focused
+      // but we update selectedSession for potential highlighting
+    }
+  }
+
+  function setViewMode(mode) {
+    viewMode = mode;
   }
 </script>
 
@@ -52,29 +63,67 @@
   </div>
 
   <div class="content">
-    {#if selectedSession}
-      <header>
-        <div class="session-title">
-          <span class="status-dot {selectedSession.status}"></span>
-          <h2>{selectedSession.name}</h2>
-          <span class="type-pill">{selectedSession.agent_type}</span>
-        </div>
-        <div class="actions">
-          <button class="action-btn stop" on:click={() => window.go.desktop.SessionService.StopSession(selectedSession.name)}>
-            Stop
+    <header>
+      <div class="header-left">
+        {#if viewMode === 'focused' && selectedSession}
+          <div class="session-title">
+            <span class="status-dot {selectedSession.status}"></span>
+            <h2>{selectedSession.name}</h2>
+            <span class="type-pill">{selectedSession.agent_type}</span>
+          </div>
+        {:else if viewMode === 'grid'}
+          <div class="session-title">
+            <h2>Command Center</h2>
+            <span class="type-pill">{$pinnedSessions.length} Pinned</span>
+          </div>
+        {:else}
+          <div class="logo-text">AgentMux</div>
+        {/if}
+      </div>
+
+      <div class="header-center">
+        <div class="view-toggle">
+          <button 
+            class:active={viewMode === 'focused'} 
+            on:click={() => setViewMode('focused')}
+          >
+            Focus
+          </button>
+          <button 
+            class:active={viewMode === 'grid'} 
+            on:click={() => setViewMode('grid')}
+          >
+            Grid
           </button>
         </div>
-      </header>
-      <div class="terminal-wrapper">
-        <Terminal sessionName={selectedSession.name} />
       </div>
-    {:else}
-      <div class="empty-state">
-        <div class="empty-icon">⌘</div>
-        <h3>No Session Selected</h3>
-        <p>Select an agent from the sidebar or start a new one to begin.</p>
+
+      <div class="header-right">
+        {#if viewMode === 'focused' && selectedSession}
+          <div class="actions">
+            <button class="action-btn stop" on:click={() => window.go.desktop.SessionService.StopSession(selectedSession.name)}>
+              Stop
+            </button>
+          </div>
+        {/if}
       </div>
-    {/if}
+    </header>
+
+    <div class="main-view">
+      {#if viewMode === 'grid'}
+        <SessionGrid activeSessionName={selectedSession?.name} />
+      {:else if selectedSession}
+        <div class="terminal-wrapper">
+          <Terminal sessionName={selectedSession.name} />
+        </div>
+      {:else}
+        <div class="empty-state">
+          <div class="empty-icon">⌘</div>
+          <h3>No Session Selected</h3>
+          <p>Select an agent from the sidebar or start a new one to begin.</p>
+        </div>
+      {/if}
+    </div>
   </div>
 </main>
 
@@ -94,7 +143,7 @@
     display: flex;
     height: 100vh;
     width: 100vw;
-    text-align: left; /* Explicitly set to left to prevent centering inheritance */
+    text-align: left;
   }
 
   .sidebar {
@@ -152,6 +201,16 @@
     flex-shrink: 0;
   }
 
+  .header-left, .header-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .header-right {
+    justify-content: flex-end;
+  }
+
   .session-title {
     display: flex;
     align-items: center;
@@ -162,6 +221,11 @@
     margin: 0;
     font-size: 1rem;
     font-weight: 600;
+  }
+
+  .logo-text {
+    font-weight: 700;
+    color: #64748b;
   }
 
   .status-dot {
@@ -181,14 +245,44 @@
     color: #64748b;
   }
 
-  .terminal-wrapper {
+  .view-toggle {
+    display: flex;
+    background: #0f172a;
+    padding: 2px;
+    border-radius: 6px;
+    border: 1px solid #2d3e50;
+  }
+
+  .view-toggle button {
+    background: none;
+    border: none;
+    color: #64748b;
+    padding: 4px 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .view-toggle button.active {
+    background: #3b82f6;
+    color: white;
+  }
+
+  .main-view {
     flex-grow: 1;
     position: relative;
     overflow: hidden;
   }
 
+  .terminal-wrapper {
+    height: 100%;
+    width: 100%;
+  }
+
   .empty-state {
-    flex-grow: 1;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
