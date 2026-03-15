@@ -41,6 +41,11 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 	}, nil
 }
 
+// TmuxClient returns the internal tmux client.
+func (m *Manager) TmuxClient() *tmux.Client {
+	return m.tmux
+}
+
 // CreateOptions configures a new agent session.
 type CreateOptions struct {
 	Name      string
@@ -259,6 +264,30 @@ func (m *Manager) CaptureOutput(ctx context.Context, name string) (string, error
 	}
 
 	return m.tmux.CapturePane(ctx, session.TmuxName, 0, 0)
+}
+
+// MoveToGroup updates the group for a session.
+func (m *Manager) MoveToGroup(ctx context.Context, name, newGroup string) error {
+	session := m.state.Get(name)
+	if session == nil {
+		return fmt.Errorf("agent %q not found", name)
+	}
+	session.Group = newGroup
+	return m.state.Put(session)
+}
+
+// StopGroup kills all sessions in a specific group.
+func (m *Manager) StopGroup(ctx context.Context, groupName string) (int, error) {
+	sessions := m.state.List()
+	count := 0
+	for _, s := range sessions {
+		if s.Group == groupName {
+			if err := m.Destroy(ctx, s.Name); err == nil {
+				count++
+			}
+		}
+	}
+	return count, nil
 }
 
 // tmuxSessionName generates the tmux session name for an agent.

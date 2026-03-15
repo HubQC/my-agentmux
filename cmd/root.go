@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"embed"
 	"fmt"
 	"os"
 
@@ -9,8 +10,9 @@ import (
 )
 
 var (
-	cfgFile string
-	cfg     *config.Config
+	cfgFile   string
+	cfg       *config.Config
+	appAssets embed.FS
 )
 
 var rootCmd = &cobra.Command{
@@ -37,7 +39,8 @@ Gemini CLI, and any other CLI-based coding agent.`,
 	SilenceErrors: true,
 }
 
-func Execute() error {
+func Execute(assets embed.FS) error {
+	appAssets = assets
 	return rootCmd.Execute()
 }
 
