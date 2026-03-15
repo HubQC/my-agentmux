@@ -93,3 +93,12 @@ func (s *SessionService) GetSession(name string) (*SessionInfo, error) {
 func (s *SessionService) SendKeys(name, keys string) error {
 	return s.mgr.SendKeys(s.ctx, name, keys, true)
 }
+
+func (s *SessionService) MoveToGroup(name, newGroup string) error {
+	return s.mgr.MoveToGroup(s.ctx, name, newGroup)
+}
+
+func (s *SessionService) StopGroup(groupName string) error {
+	_, err := s.mgr.StopGroup(s.ctx, groupName)
+	return err
+}
