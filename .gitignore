@@ -1,5 +1,6 @@
 # Binaries
 agentmux
+my_agentmux
 *.exe
 *.dll
 *.so

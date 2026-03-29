@@ -1,0 +1,45 @@
+# Test basic commands
+
+# version should print something
+exec agentmux version
+stdout 'agentmux .*'
+
+# help should print
+exec agentmux --help
+stdout 'Personal Multi-Agent Orchestrator'
+
+# init without devcontainer should create config
+exec agentmux init
+stdout 'Initialized .* file'
+
+# list should show empty message when no sessions exist
+exec agentmux list
+stdout 'No agent sessions found'
+
+# plan create
+exec agentmux plan create 'Test Plan' -d 'A test plan description'
+stdout 'Plan plan-001 created: Test Plan'
+stdout 'Status: .* draft'
+
+# plan list
+exec agentmux plan list
+stdout 'plan-001.*Test Plan.*draft'
+
+# plan approve
+exec agentmux plan approve plan-001
+stdout 'Plan plan-001 approved'
+
+# plan reject
+exec agentmux plan create 'Reject Plan'
+stdout 'Plan plan-002 created'
+exec agentmux plan reject plan-002 -r 'No good'
+stdout 'Plan plan-002 rejected'
+
+# plan delete
+exec agentmux plan delete plan-002
+stdout 'Plan plan-002 deleted'
+
+# agents should list built-ins
+exec agentmux agents
+stdout 'claude.*preset.*installed'
+stdout 'shell.*preset.*built-in'
