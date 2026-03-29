@@ -434,7 +434,7 @@ func (m *Model) refreshAgents() {
 		ag := components.AgentInfo{
 			Name:      s.Name,
 			Type:      s.AgentType,
-			Status:    s.Status,
+			Status:    string(s.Status),
 			WorkDir:   s.WorkDir,
 			CreatedAt: s.CreatedAt,
 			Group:     s.Group,

@@ -9,14 +9,23 @@ import (
 	"time"
 )
 
+// SessionStatus represents the lifecycle status of an agent session.
+type SessionStatus string
+
+const (
+	StatusRunning SessionStatus = "running"
+	StatusStopped SessionStatus = "stopped"
+	StatusError   SessionStatus = "error"
+)
+
 // AgentSession represents a tracked agent session.
 type AgentSession struct {
-	Name      string    `json:"name"`
-	TmuxName  string    `json:"tmux_name"`
-	AgentType string    `json:"agent_type"`
-	WorkDir   string    `json:"work_dir"`
-	CreatedAt time.Time `json:"created_at"`
-	Status    string    `json:"status"` // "running", "stopped", "error"
+	Name      string        `json:"name"`
+	TmuxName  string        `json:"tmux_name"`
+	AgentType string        `json:"agent_type"`
+	WorkDir   string        `json:"work_dir"`
+	CreatedAt time.Time     `json:"created_at"`
+	Status    SessionStatus `json:"status"`
 	PID       int       `json:"pid,omitempty"`
 	Group     string    `json:"group,omitempty"`
 

@@ -259,7 +259,7 @@ func (o *Orchestrator) waitForCompletion(ctx context.Context, agentName string) 
 			if err != nil {
 				return nil // Session gone = agent finished
 			}
-			if sess.Status != "running" {
+			if sess.Status != session.StatusRunning {
 				_ = o.mgr.Destroy(ctx, agentName)
 				return nil
 			}

@@ -69,7 +69,7 @@ continuously stream new output as it appears.`,
 		}
 
 		// Follow mode: poll and stream output
-		if agentSession.Status != "running" {
+		if agentSession.Status != session.StatusRunning {
 			return fmt.Errorf("agent %q is not running (status: %s)", agentName, agentSession.Status)
 		}
 

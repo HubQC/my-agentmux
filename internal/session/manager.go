@@ -72,7 +72,7 @@ func (m *Manager) Create(ctx context.Context, opts CreateOptions) (*AgentSession
 	if existing := m.state.Get(opts.Name); existing != nil {
 		tmuxName := m.tmuxSessionName(opts.Name)
 		if m.tmux.HasSession(ctx, tmuxName) {
-			return nil, fmt.Errorf("agent %q is already running", opts.Name)
+			return nil, fmt.Errorf("agent %q: %w", opts.Name, ErrAgentAlreadyRunning)
 		}
 		// Stale state — clean up
 		_ = m.state.Remove(opts.Name)
@@ -119,7 +119,7 @@ func (m *Manager) Create(ctx context.Context, opts CreateOptions) (*AgentSession
 		AgentType: opts.AgentType,
 		WorkDir:   opts.WorkDir,
 		CreatedAt: time.Now(),
-		Status:    "running",
+		Status:    StatusRunning,
 		Group:     opts.Group,
 
 		CodexProfile:    opts.CodexProfile,
@@ -146,8 +146,8 @@ func (m *Manager) List(ctx context.Context) []*AgentSession {
 
 	// Reconcile: mark sessions as stopped if tmux session is gone
 	for _, s := range sessions {
-		if !m.tmux.HasSession(ctx, s.TmuxName) && s.Status == "running" {
-			s.Status = "stopped"
+		if !m.tmux.HasSession(ctx, s.TmuxName) && s.Status == StatusRunning {
+			s.Status = StatusStopped
 			_ = m.state.Put(s)
 		}
 	}
@@ -164,12 +164,12 @@ func (m *Manager) List(ctx context.Context) []*AgentSession {
 func (m *Manager) Get(ctx context.Context, name string) (*AgentSession, error) {
 	session := m.state.Get(name)
 	if session == nil {
-		return nil, fmt.Errorf("agent %q not found", name)
+		return nil, fmt.Errorf("agent %q: %w", name, ErrAgentNotFound)
 	}
 
 	// Reconcile status
-	if !m.tmux.HasSession(ctx, session.TmuxName) && session.Status == "running" {
-		session.Status = "stopped"
+	if !m.tmux.HasSession(ctx, session.TmuxName) && session.Status == StatusRunning {
+		session.Status = StatusStopped
 		_ = m.state.Put(session)
 	}
 
@@ -183,8 +183,8 @@ func (m *Manager) Attach(ctx context.Context, name string) error {
 		return err
 	}
 
-	if session.Status != "running" {
-		return fmt.Errorf("agent %q is not running (status: %s)", name, session.Status)
+	if session.Status != StatusRunning {
+		return fmt.Errorf("agent %q: %w (status: %s)", name, ErrAgentNotRunning, session.Status)
 	}
 
 	// Use syscall.Exec to replace the current process with tmux attach
@@ -201,7 +201,7 @@ func (m *Manager) Attach(ctx context.Context, name string) error {
 func (m *Manager) Destroy(ctx context.Context, name string) error {
 	session := m.state.Get(name)
 	if session == nil {
-		return fmt.Errorf("agent %q not found", name)
+		return fmt.Errorf("agent %q: %w", name, ErrAgentNotFound)
 	}
 
 	// Kill the tmux session if it's still running
@@ -245,8 +245,8 @@ func (m *Manager) SendKeys(ctx context.Context, name string, keys string, pressE
 		return err
 	}
 
-	if session.Status != "running" {
-		return fmt.Errorf("agent %q is not running", name)
+	if session.Status != StatusRunning {
+		return fmt.Errorf("agent %q: %w", name, ErrAgentNotRunning)
 	}
 
 	return m.tmux.SendKeys(ctx, session.TmuxName, keys, pressEnter)

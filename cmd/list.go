@@ -50,11 +50,11 @@ var listCmd = &cobra.Command{
 
 		for _, s := range sessions {
 			uptime := "-"
-			if s.Status == "running" {
+			if s.Status == session.StatusRunning {
 				uptime = formatDuration(time.Since(s.CreatedAt))
 			}
 
-			statusIcon := statusSymbol(s.Status)
+			statusIcon := statusSymbol(string(s.Status))
 			fmt.Fprintf(w, "%s\t%s\t%s %s\t%s\t%s\n",
 				s.Name, s.AgentType, statusIcon, s.Status, s.WorkDir, uptime)
 		}
@@ -144,11 +144,11 @@ func printTree(sessions []*session.AgentSession, c *config.ProjectConfig) {
 		
 		for _, s := range members {
 			uptime := "-"
-			if s.Status == "running" {
+			if s.Status == session.StatusRunning {
 				uptime = formatDuration(time.Since(s.CreatedAt))
 			}
 			
-			fmt.Printf("  %s %s (%s, %s)\n", statusSymbol(s.Status), s.Name, s.AgentType, uptime)
+			fmt.Printf("  %s %s (%s, %s)\n", statusSymbol(string(s.Status)), s.Name, s.AgentType, uptime)
 		}
 	}
 }

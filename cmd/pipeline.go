@@ -67,7 +67,7 @@ var pipelineRunCmd = &cobra.Command{
 			fmt.Printf("\n\n⚠️  Received %s — cleaning up pipeline agents...\n", sig)
 			cleanupCtx := context.Background()
 			for _, name := range launchedAgents {
-				if sess, err := mgr.Get(cleanupCtx, name); err == nil && sess.Status == "running" {
+				if sess, err := mgr.Get(cleanupCtx, name); err == nil && sess.Status == session.StatusRunning {
 					_ = mgr.Destroy(cleanupCtx, name)
 					fmt.Printf("  ✓ Stopped agent %q\n", name)
 				}
@@ -117,7 +117,7 @@ var pipelineRunCmd = &cobra.Command{
 					// Session no longer exists
 					break
 				}
-				if sess.Status != "running" {
+				if sess.Status != session.StatusRunning {
 					// Clean up state
 					_ = mgr.Destroy(ctx, agentName)
 					break

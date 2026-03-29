@@ -134,7 +134,7 @@ Checks include:
 			sessions := mgr.List(ctx)
 			orphaned := 0
 			for _, s := range sessions {
-				if s.Status == "stopped" {
+				if s.Status == session.StatusStopped {
 					orphaned++
 				}
 			}
@@ -211,7 +211,7 @@ var cleanupCmd = &cobra.Command{
 		// 1. Clean stale state entries
 		sessions := mgr.List(ctx)
 		for _, s := range sessions {
-			if s.Status == "stopped" {
+			if s.Status == session.StatusStopped {
 				if dryRun {
 					fmt.Printf("  Would remove stale state: %s\n", s.Name)
 				} else {

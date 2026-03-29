@@ -3,6 +3,7 @@ package agent
 import (
 	"fmt"
 	"os/exec"
+	"sort"
 	"strings"
 )
 
@@ -114,11 +115,12 @@ func ListPresets() []Preset {
 	return presets
 }
 
-// AvailablePresets returns a comma-separated list of preset names.
+// AvailablePresets returns a comma-separated list of preset names in alphabetical order.
 func AvailablePresets() string {
 	names := make([]string, 0, len(builtinPresets))
 	for name := range builtinPresets {
 		names = append(names, name)
 	}
+	sort.Strings(names)
 	return strings.Join(names, ", ")
 }
