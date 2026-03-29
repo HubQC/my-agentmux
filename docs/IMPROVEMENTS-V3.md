@@ -21,12 +21,12 @@ This document tracks all V3 improvement tasks. It is designed for **any agent to
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| Phase 1 | Unbreak Build | `[ ]` Not Started |
-| Phase 2 | Safety & Concurrency | `[ ]` Not Started |
-| Phase 3 | Code Quality | `[ ]` Not Started |
-| Phase 4 | Test Coverage | `[ ]` Not Started |
-| Phase 5 | Stubs → Real Code | `[ ]` Not Started |
-| Phase 6 | Polish & DevEx | `[ ]` Not Started |
+| Phase 1 | Unbreak Build | `[x]` Done ✅ |
+| Phase 2 | Safety & Concurrency | `[x]` Done ✅ |
+| Phase 3 | Code Quality | `[x]` Done ✅ |
+| Phase 4 | Test Coverage | `[x]` Done ✅ |
+| Phase 5 | Stubs → Real Code | `[x]` Partial (5.1, 5.2 done; 5.3, 5.4 deferred) |
+| Phase 6 | Polish & DevEx | `[x]` Partial (6.2, 6.3 done; 6.1 deferred) |
 
 ---
 
