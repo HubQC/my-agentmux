@@ -2,13 +2,16 @@ package plugin
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Hook represents a lifecycle hook for an agent.
@@ -113,9 +116,30 @@ func (hr *HookRunner) runCommand(ctx context.Context, command string, hctx HookC
 	return cmd.Run()
 }
 
-func (hr *HookRunner) sendWebhook(_ context.Context, _ string, _ HookContext) error {
-	// Webhook implementation — placeholder for now
-	// In a full implementation, this would HTTP POST the HookContext as JSON to the URL
+func (hr *HookRunner) sendWebhook(ctx context.Context, url string, hctx HookContext) error {
+	data, err := json.Marshal(hctx)
+	if err != nil {
+		return fmt.Errorf("marshalling webhook payload: %w", err)
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("creating webhook request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "agentmux-hooks/1.0")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("sending webhook to %s: %w", url, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("webhook %s returned HTTP %d", url, resp.StatusCode)
+	}
+
 	return nil
 }
 

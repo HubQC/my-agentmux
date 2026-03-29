@@ -82,7 +82,34 @@ func Load(cfgFile string) (*Config, error) {
 		cfg.DataDir = DefaultConfig().DataDir
 	}
 
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
+	}
+
 	return cfg, ensureDataDir(cfg.DataDir)
+}
+
+// Validate checks that all config values are within acceptable ranges.
+func (c *Config) Validate() error {
+	if c.Monitor.PollIntervalMs <= 0 {
+		return fmt.Errorf("monitor.poll_interval_ms must be positive, got %d", c.Monitor.PollIntervalMs)
+	}
+	if c.Monitor.MaxLogSizeMB <= 0 {
+		return fmt.Errorf("monitor.max_log_size_mb must be positive, got %d", c.Monitor.MaxLogSizeMB)
+	}
+
+	validLogLevels := map[string]bool{
+		"debug": true, "info": true, "warn": true, "error": true,
+	}
+	if c.LogLevel != "" && !validLogLevels[c.LogLevel] {
+		return fmt.Errorf("log_level must be one of debug/info/warn/error, got %q", c.LogLevel)
+	}
+
+	if c.SessionPrefix == "" {
+		return fmt.Errorf("session_prefix must not be empty")
+	}
+
+	return nil
 }
 
 // Save writes the current config to the given file path.
