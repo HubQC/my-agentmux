@@ -32,29 +32,26 @@ func (fl *FileLock) Lock(timeout time.Duration) error {
 		return nil // Got the lock immediately
 	}
 
-	// Fall back to timed blocking
+	// Fall back to polling with non-blocking attempts
 	if timeout <= 0 {
 		timeout = 5 * time.Second
 	}
 
-	done := make(chan error, 1)
-	go func() {
-		done <- syscall.Flock(int(f.Fd()), syscall.LOCK_EX)
-	}()
+	deadline := time.Now().Add(timeout)
+	ticker := time.NewTicker(50 * time.Millisecond)
+	defer ticker.Stop()
 
-	select {
-	case err := <-done:
-		if err != nil {
-			_ = f.Close()
-			fl.file = nil
-			return fmt.Errorf("acquiring lock: %w", err)
+	for time.Now().Before(deadline) {
+		<-ticker.C
+		err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+		if err == nil {
+			return nil // Got the lock
 		}
-		return nil
-	case <-time.After(timeout):
-		_ = f.Close()
-		fl.file = nil
-		return fmt.Errorf("timeout waiting for state file lock (another agentmux process may be running)")
 	}
+
+	_ = f.Close()
+	fl.file = nil
+	return fmt.Errorf("timeout waiting for state file lock (another agentmux process may be running)")
 }
 
 // Unlock releases the file lock.

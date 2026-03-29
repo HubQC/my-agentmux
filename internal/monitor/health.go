@@ -3,6 +3,7 @@ package monitor
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -45,6 +46,7 @@ type HealthStatus struct {
 
 // HealthMonitor tracks agent health and applies restart policies.
 type HealthMonitor struct {
+	mu       sync.RWMutex
 	agents   map[string]*agentHealth
 	configs  map[string]HealthConfig
 	watcher  *Watcher
@@ -77,6 +79,8 @@ func NewHealthMonitor(watcher *Watcher, checkInterval time.Duration) *HealthMoni
 
 // Register adds an agent to health monitoring with the given config.
 func (hm *HealthMonitor) Register(agentName string, cfg HealthConfig) {
+	hm.mu.Lock()
+	defer hm.mu.Unlock()
 	hm.agents[agentName] = &agentHealth{
 		name:       agentName,
 		lastOutput: time.Now(),
@@ -87,12 +91,16 @@ func (hm *HealthMonitor) Register(agentName string, cfg HealthConfig) {
 
 // Unregister stops monitoring an agent.
 func (hm *HealthMonitor) Unregister(agentName string) {
+	hm.mu.Lock()
+	defer hm.mu.Unlock()
 	delete(hm.agents, agentName)
 	delete(hm.configs, agentName)
 }
 
 // RecordOutput marks that the agent produced output (updating its health timestamp).
 func (hm *HealthMonitor) RecordOutput(agentName string) {
+	hm.mu.Lock()
+	defer hm.mu.Unlock()
 	if a, ok := hm.agents[agentName]; ok {
 		a.lastOutput = time.Now()
 		a.status = "healthy"
@@ -101,6 +109,8 @@ func (hm *HealthMonitor) RecordOutput(agentName string) {
 
 // GetStatus returns the health status of an agent.
 func (hm *HealthMonitor) GetStatus(agentName string) *HealthStatus {
+	hm.mu.RLock()
+	defer hm.mu.RUnlock()
 	a, ok := hm.agents[agentName]
 	if !ok {
 		return nil
@@ -126,8 +136,15 @@ func (hm *HealthMonitor) GetStatus(agentName string) *HealthStatus {
 
 // AllStatuses returns health status for all monitored agents.
 func (hm *HealthMonitor) AllStatuses() []HealthStatus {
-	statuses := make([]HealthStatus, 0, len(hm.agents))
+	hm.mu.RLock()
+	names := make([]string, 0, len(hm.agents))
 	for name := range hm.agents {
+		names = append(names, name)
+	}
+	hm.mu.RUnlock()
+
+	statuses := make([]HealthStatus, 0, len(names))
+	for _, name := range names {
 		if s := hm.GetStatus(name); s != nil {
 			statuses = append(statuses, *s)
 		}
@@ -162,6 +179,8 @@ func (hm *HealthMonitor) monitorLoop(ctx context.Context) {
 }
 
 func (hm *HealthMonitor) checkAll() {
+	hm.mu.Lock()
+	defer hm.mu.Unlock()
 	for name, agent := range hm.agents {
 		cfg := hm.configs[name]
 

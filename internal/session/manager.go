@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strings"
 	"syscall"
 	"time"
 
@@ -92,7 +93,7 @@ func (m *Manager) Create(ctx context.Context, opts CreateOptions) (*AgentSession
 	if opts.Command != "" {
 		sessionCmd = opts.Command
 		for _, arg := range opts.Args {
-			sessionCmd += " " + arg
+			sessionCmd += " " + shellQuote(arg)
 		}
 	}
 
@@ -264,4 +265,25 @@ func (m *Manager) CaptureOutput(ctx context.Context, name string) (string, error
 // tmuxSessionName generates the tmux session name for an agent.
 func (m *Manager) tmuxSessionName(agentName string) string {
 	return fmt.Sprintf("%s-%s", m.cfg.SessionPrefix, agentName)
+}
+
+// shellQuote wraps an argument in single quotes for safe shell interpolation.
+// Single quotes inside the value are escaped as '\'' (end quote, escaped quote, start quote).
+func shellQuote(s string) string {
+	// If the string is simple (alphanumeric, dash, underscore, dot, slash), no quoting needed
+	safe := true
+	for _, c := range s {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+			c == '-' || c == '_' || c == '.' || c == '/' || c == ':' || c == '=') {
+			safe = false
+			break
+		}
+	}
+	if safe && s != "" {
+		return s
+	}
+
+	// Wrap in single quotes, escaping any embedded single quotes
+	escaped := strings.ReplaceAll(s, "'", "'\\''")
+	return "'" + escaped + "'"
 }
